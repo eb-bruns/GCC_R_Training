@@ -59,11 +59,11 @@ select <- dplyr::select
 
 ## set up working directories
 	## for point data (in situ and ex situ)
-pts_dir <- "C:/Users/Jean Linsky/Documents/Magnolia Coordinator PT/Statistics and R/Magnolia/points"
+pts_dir <- "C:/Users/Jean Linsky/Documents/Magnolia_Coordinator/Statistics_and_R/Magnolia/points"
 	## for polygon data (ecoregions, states, countries)
-poly_dir <- "C:/Users/Jean Linsky/Documents/Magnolia Coordinator PT/Statistics and R/Magnolia/polygons"
+poly_dir <- "C:/Users/Jean Linsky/Documents/Magnolia_Coordinator/Statistics_and_R/Magnolia/polygons"
 	## for outputs
-output_dir <- "C:/Users/Jean Linsky/Documents/Magnolia Coordinator PT/Statistics and R/Magnolia/outputs"
+output_dir <- "C:/Users/Jean Linsky/Documents/Magnolia_Coordinator/Statistics_and_R/Magnolia/outputs"
 
 #################
 ### FUNCTIONS ###
@@ -143,6 +143,12 @@ clip.by.boundary <- function(pts,pt_proj,boundary){
 ##	 leaflet map
 wgs.proj <- CRS("+init=epsg:4326 +proj=longlat +ellps=WGS84 +datum=WGS84
 	+no_defs +towgs84=0,0,0")
+
+##Warning message:
+##In showSRID(uprojargs, format = "PROJ", multiline = "NO", prefer_proj = prefer_proj) :
+ ## Discarded datum WGS_1984 in Proj4 definition,
+##but +towgs84= values preserved
+
 ## define projection for calculations (meters/km must be the unit)
 aea.proj <- CRS("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-110
 	+x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m")
@@ -153,9 +159,10 @@ aea.proj <- CRS("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-110
 world_countries <- readOGR(file.path(poly_dir,"UIA_World_Countries_Boundaries-shp/World_Countries__Generalized_.shp"))
 	## filter to only target countries; speeds things up and prevents errors.
 	##	there is a self-intersection error when trying the aggregate function for
-	##	the aea projection using all countries; tried clgeo_Clean and did not fix
+	##	the area projection using all countries; tried clgeo_Clean and did not fix
 sort(unique(world_countries@data$ISO))
-target_iso <- c("CN","JP")
+#changed to only china
+target_iso <- c("CN")
 target_countries <- world_countries[world_countries@data$ISO %in% target_iso,]
 	## create polygon for clipping buffers later, one in each projection
 target_countries.wgs <- spTransform(target_countries,wgs.proj)
@@ -199,7 +206,7 @@ triangle_lg <- makeIcon(iconUrl = "https://www.freeiconspng.com/uploads/triangle
 
 ### CREATE LIST OF TARGET SPECIES
 
-target_sp <- c("Magnolia_amoena")
+target_sp <- c("Magnolia_amoena","Magnolia_aromatica")
 ## select species to work with now
 sp <- 1
 

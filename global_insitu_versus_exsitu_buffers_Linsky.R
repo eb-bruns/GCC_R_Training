@@ -172,6 +172,7 @@ target_countries.aea <- spTransform(target_countries,aea.proj)
 	##	a work-around
 boundary.aea <- aggregate(target_countries.aea,dissolve = TRUE)
 
+
 ## Ecoregions
 ecoregions <- readOGR(file.path(poly_dir,"official/wwf_terr_ecos.shp"))
 #length(unique(ecoregions@data$ECO_ID)) #827
@@ -206,7 +207,7 @@ triangle_lg <- makeIcon(iconUrl = "https://www.freeiconspng.com/uploads/triangle
 
 ### CREATE LIST OF TARGET SPECIES
 
-target_sp <- c("Magnolia_amoena","Magnolia_aromatica")
+target_sp <- c("Magnolia_crassipes")
 ## select species to work with now
 sp <- 1
 

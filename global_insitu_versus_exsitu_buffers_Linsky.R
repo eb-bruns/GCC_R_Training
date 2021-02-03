@@ -161,8 +161,7 @@ world_countries <- readOGR(file.path(poly_dir,"UIA_World_Countries_Boundaries-sh
 	##	there is a self-intersection error when trying the aggregate function for
 	##	the area projection using all countries; tried clgeo_Clean and did not fix
 sort(unique(world_countries@data$ISO))
-#changed to only china
-target_iso <- c("CN")
+target_iso <- c("DO","GU","MA","SV","TT")
 target_countries <- world_countries[world_countries@data$ISO %in% target_iso,]
 	## create polygon for clipping buffers later, one in each projection
 target_countries.wgs <- spTransform(target_countries,wgs.proj)
@@ -207,7 +206,7 @@ triangle_lg <- makeIcon(iconUrl = "https://www.freeiconspng.com/uploads/triangle
 
 ### CREATE LIST OF TARGET SPECIES
 
-target_sp <- c("Magnolia_crassipes")
+target_sp <- c("Magnolia_dodecapetala")
 ## select species to work with now
 sp <- 1
 

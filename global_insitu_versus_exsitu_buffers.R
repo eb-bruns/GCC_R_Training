@@ -155,6 +155,8 @@ world_countries <- readOGR(file.path(poly_dir,"UIA_World_Countries_Boundaries-sh
 	##	there is a self-intersection error when trying the aggregate function for
 	##	the aea projection using all countries; tried clgeo_Clean and did not fix
 sort(unique(world_countries@data$ISO))
+	## Look up country codes at website below, using "Alpha 2" column:
+	##	https://www.nationsonline.org/oneworld/country_code_list.htm
 target_iso <- c("CN","JP")
 target_countries <- world_countries[world_countries@data$ISO %in% target_iso,]
 	## create polygon for clipping buffers later, one in each projection
@@ -186,6 +188,8 @@ eco_pal_colors <- as.vector(eco_pal_colors)
 eco_pal <- colorFactor(eco_pal_colors,ecoregions_clip.wgs@data$ECO_ID)
 
 ## Ex situ point data triangle icons
+	## you can use any icon you can find; for example, look here:
+	## 	https://www.freeiconspng.com
 triangle_sm <- makeIcon(iconUrl = "https://www.freeiconspng.com/uploads/triangle-png-28.png",
  	iconWidth = 8, iconHeight = 8)
 triangle_md <- makeIcon(iconUrl = "https://www.freeiconspng.com/uploads/triangle-png-28.png",
@@ -258,9 +262,9 @@ str(exsitu)
 #sum(exsitu$num_indiv)
 ## split by number of individuals, to use different sized symbol for each
 ## change as needed to get categories you want
-exsitu1 <- exsitu %>% arrange(num_indiv) %>% filter(num_indiv <= 1)
-exsitu2 <- exsitu %>% arrange(num_indiv) %>% filter(num_indiv > 2 & num_indiv < 4)
-exsitu3 <- exsitu %>% arrange(num_indiv) %>% filter(num_indiv >= 5)
+exsitu1 <- exsitu %>% arrange(num_indiv) %>% filter(num_indiv <= 5)
+exsitu2 <- exsitu %>% arrange(num_indiv) %>% filter(num_indiv > 5 & num_indiv < 15)
+exsitu3 <- exsitu %>% arrange(num_indiv) %>% filter(num_indiv >= 15)
 
 ## add ex situ points to in situ points
 insitu <- rbind.fill(insitu,exsitu)
@@ -276,9 +280,12 @@ exsitu_buff_wgs <- create.buffers(exsitu,20000,wgs.proj,wgs.proj,boundary.wgs)
 	## can turn layers on or off, or switch them for other polygons, as desired
 map <- leaflet(options = leafletOptions(maxZoom = 9)) %>%
   ## Base layer
+	##	 explore other base layer options here:
+	##	 http://leaflet-extras.github.io/leaflet-providers/preview/index.html
   addProviderTiles(providers$CartoDB.VoyagerNoLabels) %>%
 	## Species name label
-	addControl(paste0("<b>",gsub("_"," ",target_sp[sp])), position = "topright") %>%
+	addControl(paste0("<b>",gsub("_"," ",target_sp[sp])),
+		position = "topright") %>%
 	## Ecoregions
 	addPolygons(
 		data = ecoregions_clip.wgs, label = ~ECO_NAME,
@@ -312,16 +319,33 @@ map <- leaflet(options = leafletOptions(maxZoom = 9)) %>%
 		lng = ~decimalLongitude, lat = ~decimalLatitude, icon = triangle_lg,
 		popup = exsitu3$inst_short) %>%
 	## (optional) In situ points
-	addCircleMarkers(data = insitu,
-		lng = ~decimalLongitude, lat = ~decimalLatitude,
-		color = "white", radius = 3, fillOpacity = 1, stroke = F) %>%
-	## Add scale bar and set view
+	#addCircleMarkers(data = insitu,
+	#	lng = ~decimalLongitude, lat = ~decimalLatitude,
+	#	color = "white", radius = 3, fillOpacity = 1, stroke = F) %>%
+	## Add scale bar
 	addScaleBar(position = "bottomright",
 		options = scaleBarOptions(maxWidth = 150)) %>%
+	## Add legend
+	addControl(
+		html = "Source locality and number of wild provenance<br/>individuals in ex situ collections<br/>
+		<img src='https://www.freeiconspng.com/uploads/triangle-png-28.png'
+		style='width:8px;height:8px;'> 1-4
+		<img src='https://www.freeiconspng.com/uploads/triangle-png-28.png'
+		style='width:15px;height:15px;'> 5-14
+		<img src='https://www.freeiconspng.com/uploads/triangle-png-28.png'
+		style='width:22px;height:22px;'> 15+",
+		position = "bottomright") %>%
+  addLegend(
+  	labels = c("Species' estimated native distribution",
+							 "Estimated capture of ex situ collections"),
+  	colors = c("#FFFFFF; width: 20px; height: 20px; border-radius: 50%; opacity: 50%",
+							 "#939694; width: 20px; height: 20px; border-radius: 50%"),
+  	position = "bottomright", opacity = 1) %>%
+	## Set view (long and lat) and zoom level, for when map initially opens
 	setView(104, 32, zoom = 5)
 map
 
-## save map
+## save map as html file, so you can embed on a webpage or share with others
 		# looks like these maps are too big to save? works best to view
 		#		one-by-one in browser straight from R and take screenshot
 htmlwidgets::saveWidget(map, file.path(output_dir,paste0(target_sp[sp],"_leaflet_map.html")))

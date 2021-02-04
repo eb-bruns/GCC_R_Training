@@ -292,6 +292,8 @@ map <- leaflet(options = leafletOptions(maxZoom = 9)) %>%
 		fillColor = ~eco_pal(ecoregions_clip.wgs@data$ECO_ID),
 		fillOpacity = 0.9, color = "#757575", weight = 1.5, opacity = 0.8) %>%
 	## Country outlines
+	##	when you add country outlines, ecoregion labels don't pop up anymore...
+	##	not sure yet how to have both on the map
 	#addPolygons(
 	#	data = target_countries.wgs, label = ~COUNTRY,
 	#	fillColor = "transparent", weight = 1.5, opacity = 0.5, color = "black") %>%
@@ -326,6 +328,16 @@ map <- leaflet(options = leafletOptions(maxZoom = 9)) %>%
 	addScaleBar(position = "bottomright",
 		options = scaleBarOptions(maxWidth = 150)) %>%
 	## Add legend
+	##	not perfect, but something! Used https://imgbb.com to host the buffer
+	##	PNG images! So you could do that for any shape you'd like
+	addControl(
+		html = "<img src='https://i.ibb.co/1dW95pC/Insitu-buffer.png'
+		style='width:40px;height:40px;'> Species' estimated native distribution<br/>
+		(20 km buffer around in situ occurrence points)<br/>
+		<img src='https://i.ibb.co/SR71N6k/Exsitu-buffer.png'
+		style='width:40px;height:40px;'> Estimated capture of ex situ collections<br/>
+		(20 km buffer around wild provenance localities)",
+		position = "bottomleft") %>%
 	addControl(
 		html = "Source locality and number of wild provenance<br/>individuals in ex situ collections<br/>
 		<img src='https://www.freeiconspng.com/uploads/triangle-png-28.png'
@@ -334,13 +346,7 @@ map <- leaflet(options = leafletOptions(maxZoom = 9)) %>%
 		style='width:15px;height:15px;'> 5-14
 		<img src='https://www.freeiconspng.com/uploads/triangle-png-28.png'
 		style='width:22px;height:22px;'> 15+",
-		position = "bottomright") %>%
-  addLegend(
-  	labels = c("Species' estimated native distribution",
-							 "Estimated capture of ex situ collections"),
-  	colors = c("#FFFFFF; width: 20px; height: 20px; border-radius: 50%; opacity: 50%",
-							 "#939694; width: 20px; height: 20px; border-radius: 50%"),
-  	position = "bottomright", opacity = 1) %>%
+		position = "bottomleft") %>%
 	## Set view (long and lat) and zoom level, for when map initially opens
 	setView(104, 32, zoom = 5)
 map

@@ -190,6 +190,8 @@ eco_pal <- colorFactor(eco_pal_colors,ecoregions_clip.wgs@data$ECO_ID)
 ## Ex situ point data triangle icons
 	## you can use any icon you can find; for example, look here:
 	## 	https://www.freeiconspng.com
+	## or you can upload your own PNG and get URL for it here:
+	##  https://imgbb.com
 triangle_sm <- makeIcon(iconUrl = "https://www.freeiconspng.com/uploads/triangle-png-28.png",
  	iconWidth = 8, iconHeight = 8)
 triangle_md <- makeIcon(iconUrl = "https://www.freeiconspng.com/uploads/triangle-png-28.png",

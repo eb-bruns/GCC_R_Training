@@ -264,9 +264,15 @@ str(exsitu)
 #sum(exsitu$num_indiv)
 ## split by number of individuals, to use different sized symbol for each
 ## change as needed to get categories you want
+unique(exsitu$num_indiv)
 exsitu1 <- exsitu %>% arrange(num_indiv) %>% filter(num_indiv <= 5)
 exsitu2 <- exsitu %>% arrange(num_indiv) %>% filter(num_indiv > 5 & num_indiv < 15)
 exsitu3 <- exsitu %>% arrange(num_indiv) %>% filter(num_indiv >= 15)
+## example making categories based on different variable
+#unique(exsitu$gps_det)
+#exsitu1 <- exsitu %>% filter(gps_det == "T")
+#exsitu2 <- exsitu %>% filter(gps_det == "G")
+#exsitu3 <- exsitu %>% filter(gps_det == "L")
 
 ## add ex situ points to in situ points
 insitu <- rbind.fill(insitu,exsitu)

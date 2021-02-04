@@ -143,12 +143,6 @@ clip.by.boundary <- function(pts,pt_proj,boundary){
 ##	 leaflet map
 wgs.proj <- CRS("+init=epsg:4326 +proj=longlat +ellps=WGS84 +datum=WGS84
 	+no_defs +towgs84=0,0,0")
-
-##Warning message:
-##In showSRID(uprojargs, format = "PROJ", multiline = "NO", prefer_proj = prefer_proj) :
- ## Discarded datum WGS_1984 in Proj4 definition,
-##but +towgs84= values preserved
-
 ## define projection for calculations (meters/km must be the unit)
 aea.proj <- CRS("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-110
 	+x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m")
@@ -159,9 +153,11 @@ aea.proj <- CRS("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-110
 world_countries <- readOGR(file.path(poly_dir,"UIA_World_Countries_Boundaries-shp/World_Countries__Generalized_.shp"))
 	## filter to only target countries; speeds things up and prevents errors.
 	##	there is a self-intersection error when trying the aggregate function for
-	##	the area projection using all countries; tried clgeo_Clean and did not fix
+	##	the aea projection using all countries; tried clgeo_Clean and did not fix
 sort(unique(world_countries@data$ISO))
-target_iso <- c("DO","GU","MA","SV","TT")
+	## Look up country codes at website below, using "Alpha 2" column:
+	##	https://www.nationsonline.org/oneworld/country_code_list.htm
+target_iso <- c("MX")
 target_countries <- world_countries[world_countries@data$ISO %in% target_iso,]
 	## create polygon for clipping buffers later, one in each projection
 target_countries.wgs <- spTransform(target_countries,wgs.proj)
@@ -170,6 +166,9 @@ target_countries.aea <- spTransform(target_countries,aea.proj)
 	## this is where the error occurs with certain countries.. may need to find
 	##	a work-around
 boundary.aea <- aggregate(target_countries.aea,dissolve = TRUE)
+
+##Subcountry level
+## figure out how to add sub country (e.g. state) level boundaries for visuals
 
 
 ## Ecoregions
@@ -193,6 +192,10 @@ eco_pal_colors <- as.vector(eco_pal_colors)
 eco_pal <- colorFactor(eco_pal_colors,ecoregions_clip.wgs@data$ECO_ID)
 
 ## Ex situ point data triangle icons
+	## you can use any icon you can find; for example, look here:
+	## 	https://www.freeiconspng.com
+	## or you can upload your own PNG and get URL for it here:
+	##  https://imgbb.com
 triangle_sm <- makeIcon(iconUrl = "https://www.freeiconspng.com/uploads/triangle-png-28.png",
  	iconWidth = 8, iconHeight = 8)
 triangle_md <- makeIcon(iconUrl = "https://www.freeiconspng.com/uploads/triangle-png-28.png",
@@ -206,7 +209,7 @@ triangle_lg <- makeIcon(iconUrl = "https://www.freeiconspng.com/uploads/triangle
 
 ### CREATE LIST OF TARGET SPECIES
 
-target_sp <- c("Magnolia_dodecapetala")
+target_sp <- c("Magnolia_ofeliae")
 ## select species to work with now
 sp <- 1
 
@@ -265,9 +268,15 @@ str(exsitu)
 #sum(exsitu$num_indiv)
 ## split by number of individuals, to use different sized symbol for each
 ## change as needed to get categories you want
-exsitu1 <- exsitu %>% arrange(num_indiv) %>% filter(num_indiv <= 1)
-exsitu2 <- exsitu %>% arrange(num_indiv) %>% filter(num_indiv > 2 & num_indiv < 4)
-exsitu3 <- exsitu %>% arrange(num_indiv) %>% filter(num_indiv >= 5)
+unique(exsitu$num_indiv)
+exsitu1 <- exsitu %>% arrange(num_indiv) %>% filter(num_indiv <= 5)
+exsitu2 <- exsitu %>% arrange(num_indiv) %>% filter(num_indiv > 5 & num_indiv < 15)
+exsitu3 <- exsitu %>% arrange(num_indiv) %>% filter(num_indiv >= 15)
+## example making categories based on different variable
+#unique(exsitu$gps_det)
+exsitu1 <- exsitu %>% filter(gps_det == "C")
+exsitu2 <- exsitu %>% filter(gps_det == "G")
+exsitu3 <- exsitu %>% filter(gps_det == "L")
 
 ## add ex situ points to in situ points
 insitu <- rbind.fill(insitu,exsitu)
@@ -279,19 +288,24 @@ insitu <- rbind.fill(insitu,exsitu)
 insitu_buff_wgs <- create.buffers(insitu,20000,wgs.proj,wgs.proj,boundary.wgs)
 exsitu_buff_wgs <- create.buffers(exsitu,20000,wgs.proj,wgs.proj,boundary.wgs)
 
-## map everthing!
+## map everything!
 	## can turn layers on or off, or switch them for other polygons, as desired
 map <- leaflet(options = leafletOptions(maxZoom = 9)) %>%
   ## Base layer
+	##	 explore other base layer options here:
+	##	 http://leaflet-extras.github.io/leaflet-providers/preview/index.html
   addProviderTiles(providers$CartoDB.VoyagerNoLabels) %>%
 	## Species name label
-	addControl(paste0("<b>",gsub("_"," ",target_sp[sp])), position = "topright") %>%
+	addControl(paste0("<b>",gsub("_"," ",target_sp[sp])),
+		position = "topright") %>%
 	## Ecoregions
 	addPolygons(
 		data = ecoregions_clip.wgs, label = ~ECO_NAME,
 		fillColor = ~eco_pal(ecoregions_clip.wgs@data$ECO_ID),
 		fillOpacity = 0.9, color = "#757575", weight = 1.5, opacity = 0.8) %>%
 	## Country outlines
+	##	when you add country outlines, ecoregion labels don't pop up anymore...
+	##	not sure yet how to have both on the map
 	#addPolygons(
 	#	data = target_countries.wgs, label = ~COUNTRY,
 	#	fillColor = "transparent", weight = 1.5, opacity = 0.5, color = "black") %>%
@@ -319,16 +333,37 @@ map <- leaflet(options = leafletOptions(maxZoom = 9)) %>%
 		lng = ~decimalLongitude, lat = ~decimalLatitude, icon = triangle_lg,
 		popup = exsitu3$inst_short) %>%
 	## (optional) In situ points
-	addCircleMarkers(data = insitu,
-		lng = ~decimalLongitude, lat = ~decimalLatitude,
-		color = "white", radius = 3, fillOpacity = 1, stroke = F) %>%
-	## Add scale bar and set view
+	#addCircleMarkers(data = insitu,
+	#	lng = ~decimalLongitude, lat = ~decimalLatitude,
+	#	color = "white", radius = 3, fillOpacity = 1, stroke = F) %>%
+	## Add scale bar
 	addScaleBar(position = "bottomright",
 		options = scaleBarOptions(maxWidth = 150)) %>%
+	## Add legend
+	##	not perfect, but something! Used https://imgbb.com to host the buffer
+	##	PNG images! So you could do that for any shape you'd like
+	addControl(
+		html = "<img src='https://i.ibb.co/1dW95pC/Insitu-buffer.png'
+		style='width:40px;height:40px;'> Species' estimated native distribution<br/>
+		(20 km buffer around in situ occurrence points)<br/>
+		<img src='https://i.ibb.co/SR71N6k/Exsitu-buffer.png'
+		style='width:40px;height:40px;'> Estimated capture of ex situ collections<br/>
+		(20 km buffer around wild provenance localities)",
+		position = "bottomleft") %>%
+	addControl(
+		html = "Source locality and number of wild provenance<br/>individuals in ex situ collections<br/>
+		<img src='https://www.freeiconspng.com/uploads/triangle-png-28.png'
+		style='width:8px;height:8px;'> 1-4
+		<img src='https://www.freeiconspng.com/uploads/triangle-png-28.png'
+		style='width:15px;height:15px;'> 5-14
+		<img src='https://www.freeiconspng.com/uploads/triangle-png-28.png'
+		style='width:22px;height:22px;'> 15+",
+		position = "bottomleft") %>%
+	## Set view (long and lat) and zoom level, for when map initially opens
 	setView(104, 32, zoom = 5)
 map
 
-## save map
+## save map as html file, so you can embed on a webpage or share with others
 		# looks like these maps are too big to save? works best to view
 		#		one-by-one in browser straight from R and take screenshot
 htmlwidgets::saveWidget(map, file.path(output_dir,paste0(target_sp[sp],"_leaflet_map.html")))
@@ -458,5 +493,5 @@ for(sp in 1:length(target_sp)){
 
 ## write summary table
 summary_tbl
-write.csv(summary_tbl, file.path(output_dir,"ExSituCoverage_Test_Table.csv"),
+write.csv(summary_tbl, file.path(output_dir,"ofeliae_ExSituCoverage_Test_Table.csv"),
 	row.names = F)

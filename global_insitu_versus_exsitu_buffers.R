@@ -140,12 +140,15 @@ clip.by.boundary <- function(pts,pt_proj,boundary){
 ### DEFINE PROJECTIONS / COORDINATE REFERENCE SYSTEM (CRS)
 
 ## define initial projection of points (usually WGS 84); also used when creating
-##	 leaflet map
-wgs.proj <- CRS("+init=epsg:4326 +proj=longlat +ellps=WGS84 +datum=WGS84
-	+no_defs +towgs84=0,0,0")
-## define projection for calculations (meters/km must be the unit)
-aea.proj <- CRS("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-110
-	+x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m")
+##	leaflet map
+wgs.proj <- sp::CRS(SRS_string="EPSG:4326")
+	##CRS arguments: +proj=longlat +datum=WGS84 +no_defs
+## define projection for calculations (meters/km must be the unit); this one
+##	works best if you use projection specifically for your target region;
+## 	you can search for projections and their EPSG codes here: https://epsg.org
+## FOR ASIA/PACIFIC: 8859; FOR AMERICAS: 8858; FOR EUROPE/AFRICA: 8857
+aea.proj <- sp::CRS(SRS_string="EPSG:8859")
+	##CRS arguments: +proj=eqearth +lon_0=150 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs
 
 ### READ IN POLYGON DATA
 

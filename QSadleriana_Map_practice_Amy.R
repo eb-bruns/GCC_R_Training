@@ -160,6 +160,8 @@ aea.proj <- sp::CRS(SRS_string="EPSG:8859")
 
 ## Countries
 world_countries <- readOGR(file.path(poly_dir,"UIA_World_Countries_Boundaries-shp/World_Countries__Generalized_.shp"))
+#state boundaries
+state_boundaries <- readOGR(file.path(poly_dir, "cb_2018_us_state_500k.shp"))
 ## filter to only target countries; speeds things up and prevents errors.
 ##	there is a self-intersection error when trying the aggregate function for
 ##	the aea projection using all countries; tried clgeo_Clean and did not fix
@@ -293,8 +295,12 @@ map <- leaflet(options = leafletOptions(maxZoom = 9)) %>%
     data = ecoregions_clip.wgs, label = ~ECO_NAME,
     fillColor = ~eco_pal(ecoregions_clip.wgs@data$ECO_ID),
     fillOpacity = 0.9, color = "#757575", weight = 1.5, opacity = 0.8) %>%
-  ## Country outlines
-  #addPolygons(
+ 
+   ## State outlines #why won't it change the borders to black?! 
+  addPolygons(
+    data = state_boundaries, 
+    fillColor="000000", weight = 1.0, opacity =0.8) %>%
+      
   #	data = target_countries.wgs, label = ~COUNTRY,
   #	fillColor = "transparent", weight = 1.5, opacity = 0.5, color = "black") %>%
   ## Buffers
@@ -333,10 +339,10 @@ map <- leaflet(options = leafletOptions(maxZoom = 9)) %>%
   addControl(
     html = "<img src='https://i.ibb.co/1dW95pC/Insitu-buffer.png'
 		style='width:40px;height:40px;'> Species' estimated native distribution<br/>
-		(20 km buffer around in situ occurrence points)<br/>
+		(50 km buffer around in situ occurrence points)<br/>
 		<img src='https://i.ibb.co/SR71N6k/Exsitu-buffer.png'
 		style='width:40px;height:40px;'> Estimated capture of ex situ collections<br/>
-		(20 km buffer around wild provenance localities)",
+		(50 km buffer around wild provenance localities)",
     position = "bottomleft") %>%
   addControl(
     html = "Source locality and number of wild provenance<br/>individuals in ex situ collections<br/>

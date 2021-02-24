@@ -47,7 +47,7 @@
 #################
 
 my.packages <- c("leaflet","raster","sp","rgeos","plyr","dplyr","rgdal",
-	"Polychrome","cleangeo","RColorBrewer","smoothr")
+	"Polychrome","cleangeo","RColorBrewer","smoothr","rnaturalearth")
 #install.packages(my.packages) # turn on to install current versions
 lapply(my.packages, require, character.only=TRUE)
 
@@ -59,11 +59,11 @@ select <- dplyr::select
 
 ## set up working directories
 	## for point data (in situ and ex situ)
-pts_dir <- "/Volumes/GoogleDrive/My Drive/Conservation Consortia/R Training/points"
+pts_dir <- "/Volumes/GoogleDrive/My Drive/Conservation Consortia/R Training/buffer_mapping/points"
 	## for polygon data (ecoregions, states, countries)
-poly_dir <- "/Volumes/GoogleDrive/My Drive/Conservation Consortia/R Training/polygons"
+poly_dir <- "/Volumes/GoogleDrive/My Drive/Conservation Consortia/R Training/buffer_mapping/polygons"
 	## for outputs
-output_dir <- "/Volumes/GoogleDrive/My Drive/Conservation Consortia/R Training/outputs"
+output_dir <- "/Volumes/GoogleDrive/My Drive/Conservation Consortia/R Training/buffer_mapping/outputs"
 
 #################
 ### FUNCTIONS ###
@@ -146,7 +146,8 @@ wgs.proj <- sp::CRS(SRS_string="EPSG:4326")
 ## define projection for calculations (meters/km must be the unit); this one
 ##	works best if you use projection specifically for your target region;
 ## 	you can search for projections and their EPSG codes here: https://epsg.org
-## FOR ASIA/PACIFIC: 8859; FOR AMERICAS: 8858; FOR EUROPE/AFRICA: 8857
+## FOR ASIA/PACIFIC: 8859; FOR THE AMERICAS: 8858; FOR EUROPE/AFRICA: 8857;
+##	FOR THE U.S. ONLY, if you want to align with USGS preference: 5070
 aea.proj <- sp::CRS(SRS_string="EPSG:8859")
 	##CRS arguments: +proj=eqearth +lon_0=150 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs
 
@@ -169,6 +170,15 @@ target_countries.aea <- spTransform(target_countries,aea.proj)
 	## this is where the error occurs with certain countries.. may need to find
 	##	a work-around
 boundary.aea <- aggregate(target_countries.aea,dissolve = TRUE)
+
+## States
+	## read in state polygons using rnaturalearth package (or can read in other shapefile
+	##		you have downloaded online)
+state_bound <- ne_states(country=NULL)
+	## project to WGS84
+state_bound.wgs <- spTransform(state_bound,wgs.proj)
+	## if desired, clip to target countries only
+state_bound_clip.wgs <- raster::intersect(state_bound.wgs,boundary.wgs)
 
 ## Ecoregions
 ecoregions <- readOGR(file.path(poly_dir,"official/wwf_terr_ecos.shp"))
@@ -302,12 +312,12 @@ map <- leaflet(options = leafletOptions(maxZoom = 9)) %>%
 		data = ecoregions_clip.wgs, label = ~ECO_NAME,
 		fillColor = ~eco_pal(ecoregions_clip.wgs@data$ECO_ID),
 		fillOpacity = 0.9, color = "#757575", weight = 1.5, opacity = 0.8) %>%
-	## Country outlines
-	##	when you add country outlines, ecoregion labels don't pop up anymore...
+	## Country or state outlines
+	##	when you add these outlines, ecoregion labels don't pop up anymore...
 	##	not sure yet how to have both on the map
-	#addPolygons(
-	#	data = target_countries.wgs, label = ~COUNTRY,
-	#	fillColor = "transparent", weight = 1.5, opacity = 0.5, color = "black") %>%
+	addPolygons(
+		data = state_bound_clip.wgs, label = ~name_en,
+		fillColor = "transparent", weight = 1.5, opacity = 0.5, color = "black") %>%
 	## Buffers
 		## In situ
 	addPolygons(
@@ -363,7 +373,7 @@ map <- leaflet(options = leafletOptions(maxZoom = 9)) %>%
 map
 
 ## save map as html file, so you can embed on a webpage or share with others
-		# looks like these maps are too big to save? works best to view
+		# looks like some of these maps are too big to save? works best to view
 		#		one-by-one in browser straight from R and take screenshot
 htmlwidgets::saveWidget(map, file.path(output_dir,paste0(target_sp[sp],"_leaflet_map.html")))
 

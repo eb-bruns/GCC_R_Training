@@ -42,12 +42,14 @@
 
 ################################################################################
 
+##Feb25th update
+
 #################
 ### LIBRARIES ###
 #################
 
 my.packages <- c("leaflet","raster","sp","rgeos","plyr","dplyr","rgdal",
-	"Polychrome","cleangeo","RColorBrewer","smoothr")
+	"Polychrome","cleangeo","RColorBrewer","smoothr","rnaturalearth")
 #install.packages(my.packages) # turn on to install current versions
 lapply(my.packages, require, character.only=TRUE)
 
@@ -59,11 +61,11 @@ select <- dplyr::select
 
 ## set up working directories
 	## for point data (in situ and ex situ)
-pts_dir <- "C:/Users/Jean Linsky/Documents/Magnolia_Coordinator/Statistics_and_R/Magnolia/points"
+pts_dir <- "C:/Users/Jean Linsky/Documents/Magnolia_Coordinator/Statistics_and_R/outputs/spp_edited_points"
 	## for polygon data (ecoregions, states, countries)
 poly_dir <- "C:/Users/Jean Linsky/Documents/Magnolia_Coordinator/Statistics_and_R/Magnolia/polygons"
 	## for outputs
-output_dir <- "C:/Users/Jean Linsky/Documents/Magnolia_Coordinator/Statistics_and_R/Magnolia/outputs"
+output_dir <- "C:/Users/Jean Linsky/Documents/Magnolia_Coordinator/Statistics_and_R/Magnolia/outputs2"
 
 #################
 ### FUNCTIONS ###
@@ -140,12 +142,16 @@ clip.by.boundary <- function(pts,pt_proj,boundary){
 ### DEFINE PROJECTIONS / COORDINATE REFERENCE SYSTEM (CRS)
 
 ## define initial projection of points (usually WGS 84); also used when creating
-##	 leaflet map
-wgs.proj <- CRS("+init=epsg:4326 +proj=longlat +ellps=WGS84 +datum=WGS84
-	+no_defs +towgs84=0,0,0")
-## define projection for calculations (meters/km must be the unit)
-aea.proj <- CRS("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-110
-	+x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m")
+##	leaflet map
+wgs.proj <- sp::CRS(SRS_string="EPSG:4326")
+	##CRS arguments: +proj=longlat +datum=WGS84 +no_defs
+## define projection for calculations (meters/km must be the unit); this one
+##	works best if you use projection specifically for your target region;
+## 	you can search for projections and their EPSG codes here: https://epsg.org
+## FOR ASIA/PACIFIC: 8859; FOR THE AMERICAS: 8858; FOR EUROPE/AFRICA: 8857;
+##	FOR THE U.S. ONLY, if you want to align with USGS preference: 5070
+aea.proj <- sp::CRS(SRS_string="EPSG:8859")
+	##CRS arguments: +proj=eqearth +lon_0=150 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs
 
 ### READ IN POLYGON DATA
 
@@ -157,7 +163,7 @@ world_countries <- readOGR(file.path(poly_dir,"UIA_World_Countries_Boundaries-sh
 sort(unique(world_countries@data$ISO))
 	## Look up country codes at website below, using "Alpha 2" column:
 	##	https://www.nationsonline.org/oneworld/country_code_list.htm
-target_iso <- c("MX")
+target_iso <- c("JP")
 target_countries <- world_countries[world_countries@data$ISO %in% target_iso,]
 	## create polygon for clipping buffers later, one in each projection
 target_countries.wgs <- spTransform(target_countries,wgs.proj)
@@ -167,9 +173,14 @@ target_countries.aea <- spTransform(target_countries,aea.proj)
 	##	a work-around
 boundary.aea <- aggregate(target_countries.aea,dissolve = TRUE)
 
-##Subcountry level
-## figure out how to add sub country (e.g. state) level boundaries for visuals
-
+## States
+	## read in state polygons using rnaturalearth package (or can read in other shapefile
+	##		you have downloaded online)
+state_bound <- ne_states(country=NULL)
+	## project to WGS84
+state_bound.wgs <- spTransform(state_bound,wgs.proj)
+	## if desired, clip to target countries only
+state_bound_clip.wgs <- raster::intersect(state_bound.wgs,boundary.wgs)
 
 ## Ecoregions
 ecoregions <- readOGR(file.path(poly_dir,"official/wwf_terr_ecos.shp"))
@@ -209,7 +220,7 @@ triangle_lg <- makeIcon(iconUrl = "https://www.freeiconspng.com/uploads/triangle
 
 ### CREATE LIST OF TARGET SPECIES
 
-target_sp <- c("Magnolia_ofeliae")
+target_sp <- c("Magnolia_stellata")
 ## select species to work with now
 sp <- 1
 
@@ -217,7 +228,7 @@ sp <- 1
 
 ## read in wild in situ occurrence points
 insitu <- read.csv(file.path(pts_dir,paste0(target_sp[sp],
-	"_distribution_points_2020.csv")),na.strings=c("","NA"),
+	".csv")),na.strings=c("","NA"),
 	stringsAsFactors = F)
 str(insitu)
 ## change column names or remove columns as needed; need at least
@@ -274,9 +285,9 @@ exsitu2 <- exsitu %>% arrange(num_indiv) %>% filter(num_indiv > 5 & num_indiv < 
 exsitu3 <- exsitu %>% arrange(num_indiv) %>% filter(num_indiv >= 15)
 ## example making categories based on different variable
 #unique(exsitu$gps_det)
-exsitu1 <- exsitu %>% filter(gps_det == "C")
-exsitu2 <- exsitu %>% filter(gps_det == "G")
-exsitu3 <- exsitu %>% filter(gps_det == "L")
+#exsitu1 <- exsitu %>% filter(gps_det == "T")
+#exsitu2 <- exsitu %>% filter(gps_det == "G")
+#exsitu3 <- exsitu %>% filter(gps_det == "L")
 
 ## add ex situ points to in situ points
 insitu <- rbind.fill(insitu,exsitu)
@@ -303,12 +314,12 @@ map <- leaflet(options = leafletOptions(maxZoom = 9)) %>%
 		data = ecoregions_clip.wgs, label = ~ECO_NAME,
 		fillColor = ~eco_pal(ecoregions_clip.wgs@data$ECO_ID),
 		fillOpacity = 0.9, color = "#757575", weight = 1.5, opacity = 0.8) %>%
-	## Country outlines
-	##	when you add country outlines, ecoregion labels don't pop up anymore...
+	## Country or state outlines
+	##	when you add these outlines, ecoregion labels don't pop up anymore...
 	##	not sure yet how to have both on the map
-	#addPolygons(
-	#	data = target_countries.wgs, label = ~COUNTRY,
-	#	fillColor = "transparent", weight = 1.5, opacity = 0.5, color = "black") %>%
+	addPolygons(
+		data = state_bound_clip.wgs, label = ~name_en,
+		fillColor = "transparent", weight = 1.5, opacity = 0.5, color = "black") %>%
 	## Buffers
 		## In situ
 	addPolygons(
@@ -333,9 +344,9 @@ map <- leaflet(options = leafletOptions(maxZoom = 9)) %>%
 		lng = ~decimalLongitude, lat = ~decimalLatitude, icon = triangle_lg,
 		popup = exsitu3$inst_short) %>%
 	## (optional) In situ points
-	#addCircleMarkers(data = insitu,
-	#	lng = ~decimalLongitude, lat = ~decimalLatitude,
-	#	color = "white", radius = 3, fillOpacity = 1, stroke = F) %>%
+	addCircleMarkers(data = insitu,
+		lng = ~decimalLongitude, lat = ~decimalLatitude,
+		color = "white", radius = 3, fillOpacity = 1, stroke = F) %>%
 	## Add scale bar
 	addScaleBar(position = "bottomright",
 		options = scaleBarOptions(maxWidth = 150)) %>%
@@ -364,7 +375,7 @@ map <- leaflet(options = leafletOptions(maxZoom = 9)) %>%
 map
 
 ## save map as html file, so you can embed on a webpage or share with others
-		# looks like these maps are too big to save? works best to view
+		# looks like some of these maps are too big to save? works best to view
 		#		one-by-one in browser straight from R and take screenshot
 htmlwidgets::saveWidget(map, file.path(output_dir,paste0(target_sp[sp],"_leaflet_map.html")))
 
@@ -393,7 +404,7 @@ for(sp in 1:length(target_sp)){
 	## RIGHT NOW THIS IS JUST COPIED FROM ABOVE; WAY TO SHORTEN/NOT REPEAT?
 	## read in wild in situ occurrence points
 	insitu <- read.csv(file.path(pts_dir,paste0(target_sp[sp],
-		"_distribution_points_2020.csv")),na.strings=c("","NA"),
+		".csv")),na.strings=c("","NA"),
 		stringsAsFactors = F)
 	## change column names or remove columns as needed; need at least
 	##	"decimalLatitude" and "decimalLongitude"
@@ -493,5 +504,5 @@ for(sp in 1:length(target_sp)){
 
 ## write summary table
 summary_tbl
-write.csv(summary_tbl, file.path(output_dir,"ofeliae_ExSituCoverage_Test_Table.csv"),
+write.csv(summary_tbl, file.path(output_dir,"aromatica_ExSituCoverage_Test_Table.csv"),
 	row.names = F)

@@ -47,7 +47,8 @@
 #################
 
 my.packages <- c("leaflet","raster","sp","rgeos","plyr","dplyr","rgdal",
-	"Polychrome","cleangeo","RColorBrewer","smoothr","rnaturalearth")
+	"Polychrome","cleangeo","RColorBrewer","smoothr","rnaturalearth","polylabelr",
+	"sf")
 #install.packages(my.packages) # turn on to install current versions
 lapply(my.packages, require, character.only=TRUE)
 
@@ -177,8 +178,22 @@ boundary.aea <- aggregate(target_countries.aea,dissolve = TRUE)
 state_bound <- ne_states(country=NULL)
 	## project to WGS84
 state_bound.wgs <- spTransform(state_bound,wgs.proj)
-	## if desired, clip to target countries only
-state_bound_clip.wgs <- raster::intersect(state_bound.wgs,boundary.wgs)
+	## if desired, select states in target countries only
+state_bound_clip.wgs <- state_bound.wgs[state_bound.wgs@data$iso_a2 %in% target_iso,]
+	## find the visual center point of each state (still not perfect), for
+	##		labeling purposes
+simple_states <- st_as_sf(state_bound_clip.wgs)
+state_centers <- as.data.frame(do.call(rbind, poi(simple_states, precision=0.01)))
+state_centers$label <- state_bound_clip.wgs@data$name_en
+state_centers$x <- as.numeric(state_centers$x)
+state_centers$y <- as.numeric(state_centers$y)
+	## (optional) edit state/province names to better format for map labels
+	##	 remove word "Prefecture" in labels
+state_centers$label <- gsub(" Prefecture","",state_centers$label)
+	##	 remove words "Autonomous Region" in labels
+state_centers$label <- gsub(" Autonomous Region","",state_centers$label)
+	## 	 view labels
+state_centers
 
 ## Ecoregions
 ecoregions <- readOGR(file.path(poly_dir,"official/wwf_terr_ecos.shp"))
@@ -277,6 +292,8 @@ str(exsitu)
 #sum(exsitu$num_indiv)
 ## split by number of individuals, to use different sized symbol for each
 ## change as needed to get categories you want
+##		and remember to update the numbers in the final "addControl" section when
+##		mapping (line 390-397 below) if you want the legend to be correct!!!
 unique(exsitu$num_indiv)
 exsitu1 <- exsitu %>% arrange(num_indiv) %>% filter(num_indiv <= 5)
 exsitu2 <- exsitu %>% arrange(num_indiv) %>% filter(num_indiv > 5 & num_indiv < 15)
@@ -311,13 +328,18 @@ map <- leaflet(options = leafletOptions(maxZoom = 9)) %>%
 	addPolygons(
 		data = ecoregions_clip.wgs, label = ~ECO_NAME,
 		fillColor = ~eco_pal(ecoregions_clip.wgs@data$ECO_ID),
-		fillOpacity = 0.9, color = "#757575", weight = 1.5, opacity = 0.8) %>%
-	## Country or state outlines
+		fillOpacity = 0.8, color = "#757575", weight = 1.5, opacity = 0.8) %>%
+	## (optional) Country or state outlines
 	##	when you add these outlines, ecoregion labels don't pop up anymore...
 	##	not sure yet how to have both on the map
 	addPolygons(
-		data = state_bound_clip.wgs, label = ~name_en,
-		fillColor = "transparent", weight = 1.5, opacity = 0.5, color = "black") %>%
+		data = state_bound_clip.wgs, label = ~name_en, fillColor = "transparent",
+		weight = 1.5, opacity = 0.3, color = "black") %>%
+		## (optional) Add static labels to countries/states
+	addLabelOnlyMarkers(
+		data = state_centers, lng = ~x, lat = ~y, label = ~label,
+    labelOptions = labelOptions(noHide = TRUE, textOnly = TRUE,
+			style = list("font-weight"="bold","font-size"="13px","color"="black"))) %>%
 	## Buffers
 		## In situ
 	addPolygons(

@@ -60,7 +60,7 @@ select <- dplyr::select
 
 ## set up working directories
 	## for point data (in situ and ex situ)
-pts_dir <- "C:/Users/Jean Linsky/Documents/Magnolia_Coordinator/Statistics_and_R/outputs/spp_raw_points"
+pts_dir <- "C:/Users/Jean Linsky/Documents/Magnolia_Coordinator/Statistics_and_R/outputs/spp_edited_points"
 	## for polygon data (ecoregions, states, countries)
 poly_dir <- "C:/Users/Jean Linsky/Documents/Magnolia_Coordinator/Statistics_and_R/Magnolia/polygons"
 	## for outputs
@@ -149,7 +149,7 @@ wgs.proj <- sp::CRS(SRS_string="EPSG:4326")
 ## 	you can search for projections and their EPSG codes here: https://epsg.org
 ## FOR ASIA/PACIFIC: 8859; FOR THE AMERICAS: 8858; FOR EUROPE/AFRICA: 8857;
 ##	FOR THE U.S. ONLY, if you want to align with USGS preference: 5070
-aea.proj <- sp::CRS(SRS_string="EPSG:8858")
+aea.proj <- sp::CRS(SRS_string="EPSG:8859")
 	##CRS arguments: +proj=eqearth +lon_0=150 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs
 
 ### READ IN POLYGON DATA
@@ -162,7 +162,7 @@ world_countries <- readOGR(file.path(poly_dir,"UIA_World_Countries_Boundaries-sh
 sort(unique(world_countries@data$ISO))
 	## Look up country codes at website below, using "Alpha 2" column:
 	##	https://www.nationsonline.org/oneworld/country_code_list.htm
-target_iso <- c("MX")
+target_iso <- c("CN","VN","LA")
 target_countries <- world_countries[world_countries@data$ISO %in% target_iso,]
 	## create polygon for clipping buffers later, one in each projection
 target_countries.wgs <- spTransform(target_countries,wgs.proj)
@@ -237,9 +237,9 @@ triangle_lg <- makeIcon(iconUrl = "https://www.freeiconspng.com/uploads/triangle
 
 ### CREATE LIST OF TARGET SPECIES
 
-target_sp <- c("Magnolia_lacei","Magnolia_lotungensis","Magnolia_mexicana","Magnolia_oaxacensis")
+target_sp <- c("Magnolia_lacei","Magnolia_lotungensis","Magnolia_mexicana","Magnolia_oaxacensis","Magnolia_odora")
 ## select species to work with now
-sp <- 4
+sp <- 5
 
 ### READ IN AND PREP POINT DATA
 
@@ -433,7 +433,7 @@ for(sp in 1:length(target_sp)){
 	## change column names or remove columns as needed; need at least
 	##	"decimalLatitude" and "decimalLongitude"
 	insitu <- insitu %>%
-		rename(decimalLatitude = Latitude, decimalLongitude = Longitude) %>%
+		#rename(decimalLatitude = Latitude, decimalLongitude = Longitude) %>%
 		filter(Category == "in_situ")
 	## if desired, can clip points by boundary so only in target area
 	## (helpful if focusing on one country/region)

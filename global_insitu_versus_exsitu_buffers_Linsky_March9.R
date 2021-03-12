@@ -46,6 +46,7 @@
 ### LIBRARIES ###
 #################
 
+rm(list=ls())
 my.packages <- c("leaflet","raster","sp","rgeos","plyr","dplyr","rgdal",
 	"Polychrome","cleangeo","RColorBrewer","smoothr","rnaturalearth","polylabelr",
 	"sf")
@@ -60,7 +61,7 @@ select <- dplyr::select
 
 ## set up working directories
 	## for point data (in situ and ex situ)
-pts_dir <- "C:/Users/Jean Linsky/Documents/Magnolia_Coordinator/Statistics_and_R/outputs/spp_edited_points"
+pts_dir <- "C:/Users/Jean Linsky/Documents/Magnolia_Coordinator/Statistics_and_R/outputs/spp_raw_points"
 	## for polygon data (ecoregions, states, countries)
 poly_dir <- "C:/Users/Jean Linsky/Documents/Magnolia_Coordinator/Statistics_and_R/Magnolia/polygons"
 	## for outputs
@@ -162,7 +163,7 @@ world_countries <- readOGR(file.path(poly_dir,"UIA_World_Countries_Boundaries-sh
 sort(unique(world_countries@data$ISO))
 	## Look up country codes at website below, using "Alpha 2" column:
 	##	https://www.nationsonline.org/oneworld/country_code_list.htm
-target_iso <- c("CN","VN","LA")
+target_iso <- c("CN")
 target_countries <- world_countries[world_countries@data$ISO %in% target_iso,]
 	## create polygon for clipping buffers later, one in each projection
 target_countries.wgs <- spTransform(target_countries,wgs.proj)
@@ -237,9 +238,10 @@ triangle_lg <- makeIcon(iconUrl = "https://www.freeiconspng.com/uploads/triangle
 
 ### CREATE LIST OF TARGET SPECIES
 
-target_sp <- c("Magnolia_lacei","Magnolia_lotungensis","Magnolia_mexicana","Magnolia_oaxacensis","Magnolia_odora")
+#target_sp <- c("Magnolia_lacei","Magnolia_lotungensis","Magnolia_mexicana","Magnolia_oaxacensis","Magnolia_odora")
+target_sp <- c("Magnolia_sinica")
 ## select species to work with now
-sp <- 5
+sp <- 1
 
 ### READ IN AND PREP POINT DATA
 
@@ -432,9 +434,9 @@ for(sp in 1:length(target_sp)){
 		stringsAsFactors = F)
 	## change column names or remove columns as needed; need at least
 	##	"decimalLatitude" and "decimalLongitude"
-	insitu <- insitu %>%
+	#insitu <- insitu %>%
 		#rename(decimalLatitude = Latitude, decimalLongitude = Longitude) %>%
-		filter(Category == "in_situ")
+		#filter(Category == "in_situ")
 	## if desired, can clip points by boundary so only in target area
 	## (helpful if focusing on one country/region)
 	insitu <- clip.by.boundary(insitu,wgs.proj,boundary.wgs)
@@ -528,5 +530,5 @@ for(sp in 1:length(target_sp)){
 
 ## write summary table
 summary_tbl
-write.csv(summary_tbl, file.path(output_dir,"M_dodecapetala_ExSituCoverage_Test_Table.csv"),
+write.csv(summary_tbl, file.path(output_dir,"M_sinica_ExSituCoverage_Test_Table.csv"),
 	row.names = F)

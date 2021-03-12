@@ -239,7 +239,7 @@ triangle_lg <- makeIcon(iconUrl = "https://www.freeiconspng.com/uploads/triangle
 ### CREATE LIST OF TARGET SPECIES
 
 #target_sp <- c("Magnolia_lacei","Magnolia_lotungensis","Magnolia_mexicana","Magnolia_oaxacensis","Magnolia_odora")
-target_sp <- c("Magnolia_sinica")
+target_sp <- c("Magnolia_zenii")
 ## select species to work with now
 sp <- 1
 
@@ -530,5 +530,5 @@ for(sp in 1:length(target_sp)){
 
 ## write summary table
 summary_tbl
-write.csv(summary_tbl, file.path(output_dir,"M_sinica_ExSituCoverage_Test_Table.csv"),
+write.csv(summary_tbl, file.path(output_dir,"M_zenii_ExSituCoverage_Test_Table.csv"),
 	row.names = F)

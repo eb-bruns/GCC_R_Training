@@ -151,7 +151,7 @@ wgs.proj <- sp::CRS(SRS_string="EPSG:4326")
 ## 	you can search for projections and their EPSG codes here: https://epsg.org
 ## FOR ASIA/PACIFIC: 8859; FOR THE AMERICAS: 8858; FOR EUROPE/AFRICA: 8857;
 ##	FOR THE U.S. ONLY, if you want to align with USGS preference: 5070
-aea.proj <- sp::CRS(SRS_string="EPSG:8858")
+aea.proj <- sp::CRS(SRS_string="EPSG:8859")
 	##CRS arguments: +proj=eqearth +lon_0=150 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs
 
 ### READ IN POLYGON DATA
@@ -164,7 +164,7 @@ world_countries <- readOGR(file.path(poly_dir,"UIA_World_Countries_Boundaries-sh
 sort(unique(world_countries@data$ISO))
 	## Look up country codes at website below, using "Alpha 2" column:
 	##	https://www.nationsonline.org/oneworld/country_code_list.htm
-target_iso <- c("HN")
+target_iso <- c("CN")
 target_countries <- world_countries[world_countries@data$ISO %in% target_iso,]
 	## create polygon for clipping buffers later, one in each projection
 target_countries.wgs <- spTransform(target_countries,wgs.proj)
@@ -240,7 +240,7 @@ triangle_lg <- makeIcon(iconUrl = "https://www.freeiconspng.com/uploads/triangle
 ### CREATE LIST OF TARGET SPECIES
 
 #target_sp <- c("Magnolia_lacei","Magnolia_lotungensis","Magnolia_mexicana","Magnolia_oaxacensis","Magnolia_odora")
-target_sp <- c("Magnolia_yoroconte")
+target_sp <- c("Magnolia_lucida")
 ## select species to work with now
 sp <- 1
 
@@ -248,7 +248,7 @@ sp <- 1
 
 ## read in wild in situ occurrence points
 insitu <- read.csv(file.path(pts_dir,paste0(target_sp[sp],
-	".csv")),na.strings=c("","NA"),
+	"_1.csv")),na.strings=c("","NA"),
 	stringsAsFactors = F)
 str(insitu)
 ## change column names or remove columns as needed; need at least
@@ -402,9 +402,10 @@ map <- leaflet(options = leafletOptions(maxZoom = 9)) %>%
 map
 
 ## save map as html file, so you can embed on a webpage or share with others
-		# looks like some of these maps are too big to save? works best to view
-		#		one-by-one in browser straight from R and take screenshot
+# looks like some of these maps are too big to save? works best to view
+#		one-by-one in browser straight from R and take screenshot
 htmlwidgets::saveWidget(map, file.path(output_dir,paste0(target_sp[sp],"_leaflet_map.html")))
+
 
 ################################################################################
 ## Calculate geographic and ecological coverage of ex situ collections
@@ -431,7 +432,7 @@ for(sp in 1:length(target_sp)){
 	## RIGHT NOW THIS IS JUST COPIED FROM ABOVE; WAY TO SHORTEN/NOT REPEAT?
 	## read in wild in situ occurrence points
 	insitu <- read.csv(file.path(pts_dir,paste0(target_sp[sp],
-		".csv")),na.strings=c("","NA"),
+		"_1.csv")),na.strings=c("","NA"),
 		stringsAsFactors = F)
 	## change column names or remove columns as needed; need at least
 	##	"decimalLatitude" and "decimalLongitude"
@@ -531,5 +532,5 @@ for(sp in 1:length(target_sp)){
 
 ## write summary table
 summary_tbl
-write.csv(summary_tbl, file.path(output_dir,"M_yoroconte_ExSituCoverage_Test_Table.csv"),
+write.csv(summary_tbl, file.path(output_dir,"M_lacei_ExSituCoverage_Test_Table.csv"),
 	row.names = F)

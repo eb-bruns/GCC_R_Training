@@ -240,7 +240,7 @@ triangle_lg <- makeIcon(iconUrl = "https://www.freeiconspng.com/uploads/triangle
 ### CREATE LIST OF TARGET SPECIES
 
 #target_sp <- c("Magnolia_lacei","Magnolia_lotungensis","Magnolia_mexicana","Magnolia_oaxacensis","Magnolia_odora")
-target_sp <- c("Magnolia_lucida")
+target_sp <- c("Magnolia_officinalis")
 ## select species to work with now
 sp <- 1
 
@@ -248,7 +248,7 @@ sp <- 1
 
 ## read in wild in situ occurrence points
 insitu <- read.csv(file.path(pts_dir,paste0(target_sp[sp],
-	"_1.csv")),na.strings=c("","NA"),
+	".csv")),na.strings=c("","NA"),
 	stringsAsFactors = F)
 str(insitu)
 ## change column names or remove columns as needed; need at least
@@ -432,7 +432,7 @@ for(sp in 1:length(target_sp)){
 	## RIGHT NOW THIS IS JUST COPIED FROM ABOVE; WAY TO SHORTEN/NOT REPEAT?
 	## read in wild in situ occurrence points
 	insitu <- read.csv(file.path(pts_dir,paste0(target_sp[sp],
-		"_1.csv")),na.strings=c("","NA"),
+		".csv")),na.strings=c("","NA"),
 		stringsAsFactors = F)
 	## change column names or remove columns as needed; need at least
 	##	"decimalLatitude" and "decimalLongitude"
@@ -532,5 +532,5 @@ for(sp in 1:length(target_sp)){
 
 ## write summary table
 summary_tbl
-write.csv(summary_tbl, file.path(output_dir,"M_lucida_ExSituCoverage_Test_Table.csv"),
+write.csv(summary_tbl, file.path(output_dir,"M_officinalis_ExSituCoverage_Test_Table.csv"),
 	row.names = F)

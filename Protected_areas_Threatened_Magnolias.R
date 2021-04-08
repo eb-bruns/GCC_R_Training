@@ -47,7 +47,7 @@ pts_dir <- "C:/Users/Jean Linsky/Documents/Magnolia_Coordinator/Statistics_and_R
 	## for polygon data (ecoregions, states, countries)
 poly_dir <- "C:/Users/Jean Linsky/Documents/Magnolia_Coordinator/Statistics_and_R/Magnolia/polygons"
   ## PA directory
-pa_dir <- "C:/Users/Jean Linsky/Documents/Magnolia_Coordinator/GIS/Protected Areas Maps/Mexico_PAs_2"
+pa_dir <- "C:/Users/Jean Linsky/Documents/Magnolia_Coordinator/GIS/Protected Areas Maps/China_PAs"
 	## for outputs
 output_dir <- "C:/Users/Jean Linsky/Documents/Magnolia_Coordinator/Statistics_and_R/Magnolia/Protected Area Maps for publication/Test_R_Maps"
 
@@ -85,7 +85,7 @@ wgs.proj <- sp::CRS(SRS_string="EPSG:4326")
 ## 	you can search for projections and their EPSG codes here: https://epsg.org
 ## FOR ASIA/PACIFIC: 8859; FOR THE AMERICAS: 8858; FOR EUROPE/AFRICA: 8857;
 ##	FOR THE U.S. ONLY, if you want to align with USGS preference: 5070
-aea.proj <- sp::CRS(SRS_string="EPSG:8858")
+aea.proj <- sp::CRS(SRS_string="EPSG:8859")
 	##CRS arguments: +proj=eqearth +lon_0=150 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs
 
 ### READ IN POLYGON DATA
@@ -98,7 +98,7 @@ world_countries <- readOGR(file.path(poly_dir,"UIA_World_Countries_Boundaries-sh
 sort(unique(world_countries@data$ISO))
 	## Look up country codes at website below, using "Alpha 2" column:
 	##	https://www.nationsonline.org/oneworld/country_code_list.htm
-target_iso <- c("MX")
+target_iso <- c("CN")
 target_countries <- world_countries[world_countries@data$ISO %in% target_iso,]
 	## create polygon for clipping buffers later, one in each projection
 target_countries.wgs <- spTransform(target_countries,wgs.proj)
@@ -109,17 +109,17 @@ target_countries.aea <- spTransform(target_countries,aea.proj)
 boundary.aea <- aggregate(target_countries.aea,dissolve = TRUE)
 
 ##Protected Areas
-protected_areas0 <- readOGR(file.path(pa_dir,"WDPA_WDOECM_Apr2021_Public_MEX_shp-polygons0.shp"))
+protected_areas0 <- readOGR(file.path(pa_dir,"WDPA_WDOECM_Apr2021_Public_CHN_shp-polygons0.shp"))
 ##clipping PAs to land only
 protected_areas0_clip.wgs <- raster::intersect(protected_areas0,boundary.wgs)
 protected_areas0_clip.aea <- raster::intersect(protected_areas0,boundary.aea)
 
-protected_areas1 <- readOGR(file.path(pa_dir,"WDPA_WDOECM_Apr2021_Public_MEX_shp-polygons1.shp"))
+protected_areas1 <- readOGR(file.path(pa_dir,"WDPA_WDOECM_Apr2021_Public_CHN_shp-polygons1.shp"))
 ##clipping PAs to land only
 protected_areas1_clip.wgs <- raster::intersect(protected_areas1,boundary.wgs)
 protected_areas1_clip.aea <- raster::intersect(protected_areas1,boundary.aea)
 
-protected_areas2 <- readOGR(file.path(pa_dir,"WDPA_WDOECM_Apr2021_Public_MEX_shp-polygons2.shp"))
+protected_areas2 <- readOGR(file.path(pa_dir,"WDPA_WDOECM_Apr2021_Public_CHN_shp-polygons2.shp"))
 ##clipping PAs to land only
 protected_areas2_clip.wgs <- raster::intersect(protected_areas2,boundary.wgs)
 protected_areas2_clip.aea <- raster::intersect(protected_areas2,boundary.aea)
@@ -164,7 +164,7 @@ pa_pal <- colorFactor(pa_pal_colors,protected_areas0@data$ECO_ID)
 
 ### CREATE LIST OF TARGET SPECIES
 
-target_sp <- c("Magnolia_iltisiana")
+target_sp <- c("Magnolia_zenii")
 ## select species to work with now
 sp <- 1
 
@@ -226,7 +226,7 @@ map <- leaflet(options = leafletOptions(maxZoom = 9)) %>%
 	## (optional) In situ points
 	addCircleMarkers(data = insitu,
 		lng = ~decimalLongitude, lat = ~decimalLatitude,
-		color = "black", radius = 3, fillOpacity = 1, stroke = F) %>%
+		color = "black", radius = 5, fillOpacity = 1, stroke = F) %>%
 	## Add scale bar
 	addScaleBar(position = "bottomright",
 		options = scaleBarOptions(maxWidth = 150)) %>%

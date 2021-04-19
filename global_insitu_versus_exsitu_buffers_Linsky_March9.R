@@ -151,7 +151,7 @@ wgs.proj <- sp::CRS(SRS_string="EPSG:4326")
 ## 	you can search for projections and their EPSG codes here: https://epsg.org
 ## FOR ASIA/PACIFIC: 8859; FOR THE AMERICAS: 8858; FOR EUROPE/AFRICA: 8857;
 ##	FOR THE U.S. ONLY, if you want to align with USGS preference: 5070
-aea.proj <- sp::CRS(SRS_string="EPSG:8859")
+aea.proj <- sp::CRS(SRS_string="EPSG:8858")
 	##CRS arguments: +proj=eqearth +lon_0=150 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs
 
 ### READ IN POLYGON DATA
@@ -164,7 +164,7 @@ world_countries <- readOGR(file.path(poly_dir,"UIA_World_Countries_Boundaries-sh
 sort(unique(world_countries@data$ISO))
 	## Look up country codes at website below, using "Alpha 2" column:
 	##	https://www.nationsonline.org/oneworld/country_code_list.htm
-target_iso <- c("CN")
+target_iso <- c("MX")
 target_countries <- world_countries[world_countries@data$ISO %in% target_iso,]
 	## create polygon for clipping buffers later, one in each projection
 target_countries.wgs <- spTransform(target_countries,wgs.proj)
@@ -240,7 +240,7 @@ triangle_lg <- makeIcon(iconUrl = "https://www.freeiconspng.com/uploads/triangle
 ### CREATE LIST OF TARGET SPECIES
 
 #target_sp <- c("Magnolia_lacei","Magnolia_lotungensis","Magnolia_mexicana","Magnolia_oaxacensis","Magnolia_odora")
-target_sp <- c("Magnolia_officinalis")
+target_sp <- c("Magnolia_mexicana")
 ## select species to work with now
 sp <- 1
 

@@ -151,7 +151,7 @@ wgs.proj <- sp::CRS(SRS_string="EPSG:4326")
 ## 	you can search for projections and their EPSG codes here: https://epsg.org
 ## FOR ASIA/PACIFIC: 8859; FOR THE AMERICAS: 8858; FOR EUROPE/AFRICA: 8857;
 ##	FOR THE U.S. ONLY, if you want to align with USGS preference: 5070
-aea.proj <- sp::CRS(SRS_string="EPSG:8858")
+aea.proj <- sp::CRS(SRS_string="EPSG:8859")
 	##CRS arguments: +proj=eqearth +lon_0=150 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs
 
 ### READ IN POLYGON DATA
@@ -164,7 +164,7 @@ world_countries <- readOGR(file.path(poly_dir,"UIA_World_Countries_Boundaries-sh
 sort(unique(world_countries@data$ISO))
 	## Look up country codes at website below, using "Alpha 2" column:
 	##	https://www.nationsonline.org/oneworld/country_code_list.htm
-target_iso <- c("MX")
+target_iso <- c("CN","VN")
 target_countries <- world_countries[world_countries@data$ISO %in% target_iso,]
 	## create polygon for clipping buffers later, one in each projection
 target_countries.wgs <- spTransform(target_countries,wgs.proj)
@@ -173,6 +173,15 @@ target_countries.aea <- spTransform(target_countries,aea.proj)
 	## this is where the error occurs with certain countries.. may need to find
 	##	a work-around
 boundary.aea <- aggregate(target_countries.aea,dissolve = TRUE)
+
+## find the visual center point of each country (still not perfect), for
+##		labeling purposes
+simple_countries <- st_as_sf(target_countries.wgs)
+country_centers <- as.data.frame(do.call(rbind, poi(simple_countries, precision=0.01)))
+country_centers$label <- target_countries.wgs@data$COUNTRY
+country_centers$x <- as.numeric(country_centers$x)
+country_centers$y <- as.numeric(country_centers$y)
+
 
 #install.packages("rnaturalearthhires", repos = "http://packages.ropensci.org", type = "source")
 
@@ -240,7 +249,7 @@ triangle_lg <- makeIcon(iconUrl = "https://www.freeiconspng.com/uploads/triangle
 ### CREATE LIST OF TARGET SPECIES
 
 #target_sp <- c("Magnolia_lacei","Magnolia_lotungensis","Magnolia_mexicana","Magnolia_oaxacensis","Magnolia_odora")
-target_sp <- c("Magnolia_mexicana")
+target_sp <- c("Magnolia_lacei")
 ## select species to work with now
 sp <- 1
 
@@ -248,7 +257,7 @@ sp <- 1
 
 ## read in wild in situ occurrence points
 insitu <- read.csv(file.path(pts_dir,paste0(target_sp[sp],
-	".csv")),na.strings=c("","NA"),
+	"_1.csv")),na.strings=c("","NA"),
 	stringsAsFactors = F)
 str(insitu)
 ## change column names or remove columns as needed; need at least
@@ -321,7 +330,7 @@ insitu <- rbind.fill(insitu,exsitu)
 insitu_buff_wgs <- create.buffers(insitu,20000,wgs.proj,wgs.proj,boundary.wgs)
 exsitu_buff_wgs <- create.buffers(exsitu,20000,wgs.proj,wgs.proj,boundary.wgs)
 
-## map everthing!
+## map everything!
 	## can turn layers on or off, or switch them for other polygons, as desired
 map <- leaflet(options = leafletOptions(maxZoom = 9)) %>%
   ## Base layer
@@ -337,16 +346,20 @@ map <- leaflet(options = leafletOptions(maxZoom = 9)) %>%
 		fillColor = ~eco_pal(ecoregions_clip.wgs@data$ECO_ID),
 		fillOpacity = 0.8, color = "#757575", weight = 1.5, opacity = 0.8) %>%
 	## (optional) Country or state outlines
+  ##  REMEMBER TO CHANGE BETWEEN COUNTRIE AND STATES, DEPENDING ON SPECIES
 	##	when you add these outlines, ecoregion labels don't pop up anymore...
 	##	not sure yet how to have both on the map
-	addPolygons(
-		data = state_bound_clip.wgs, label = ~name_en, fillColor = "transparent",
-		weight = 1.5, opacity = 0.3, color = "black") %>%
-		## (optional) Add static labels to countries/states
-	addLabelOnlyMarkers(
-		data = state_centers, lng = ~x, lat = ~y, label = ~label,
+  ## (optional) Country or state outlines
+  ##	when you add these outlines, ecoregion labels don't pop up anymore...
+  ##	not sure yet how to have both on the map
+  addPolygons(
+    data = state_bound_clip.wgs, label = ~name_en, fillColor = "transparent",
+    weight = 1.5, opacity = 0.3, color = "black") %>%
+  ## (optional) Add static labels to countries/states
+  addLabelOnlyMarkers(
+    data = state_centers, lng = ~x, lat = ~y, label = ~label,
     labelOptions = labelOptions(noHide = TRUE, textOnly = TRUE,
-			style = list("font-weight"="bold","font-size"="13px","color"="black"))) %>%
+          style = list("font-weight"="bold","font-size"="13px","color"="black"))) %>%
 	## Buffers
 		## In situ
 	addPolygons(
@@ -371,9 +384,9 @@ map <- leaflet(options = leafletOptions(maxZoom = 9)) %>%
 		lng = ~decimalLongitude, lat = ~decimalLatitude, icon = triangle_lg,
 		popup = exsitu3$inst_short) %>%
 	## (optional) In situ points
-	#addCircleMarkers(data = insitu,
-		#lng = ~decimalLongitude, lat = ~decimalLatitude,
-		#color = "white", radius = 3, fillOpacity = 1, stroke = F) %>%
+	addCircleMarkers(data = insitu,
+		lng = ~decimalLongitude, lat = ~decimalLatitude,
+		color = "white", radius = 3, fillOpacity = 1, stroke = F) %>%
 	## Add scale bar
 	addScaleBar(position = "bottomright",
 		options = scaleBarOptions(maxWidth = 150)) %>%
@@ -432,7 +445,7 @@ for(sp in 1:length(target_sp)){
 	## RIGHT NOW THIS IS JUST COPIED FROM ABOVE; WAY TO SHORTEN/NOT REPEAT?
 	## read in wild in situ occurrence points
 	insitu <- read.csv(file.path(pts_dir,paste0(target_sp[sp],
-		".csv")),na.strings=c("","NA"),
+		"_1.csv")),na.strings=c("","NA"),
 		stringsAsFactors = F)
 	## change column names or remove columns as needed; need at least
 	##	"decimalLatitude" and "decimalLongitude"
@@ -532,5 +545,5 @@ for(sp in 1:length(target_sp)){
 
 ## write summary table
 summary_tbl
-write.csv(summary_tbl, file.path(output_dir,"M_officinalis_ExSituCoverage_Test_Table.csv"),
+write.csv(summary_tbl, file.path(output_dir,"M_lacei_ExSituCoverage_Test_Table.csv"),
 	row.names = F)

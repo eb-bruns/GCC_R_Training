@@ -47,7 +47,7 @@ pts_dir <- "C:/Users/Jean Linsky/Documents/Magnolia_Coordinator/Statistics_and_R
 	## for polygon data (ecoregions, states, countries)
 poly_dir <- "C:/Users/Jean Linsky/Documents/Magnolia_Coordinator/Statistics_and_R/Magnolia/polygons"
   ## PA directory
-pa_dir <- "C:/Users/Jean Linsky/Documents/Magnolia_Coordinator/GIS/Protected Areas Maps/dodecapetala_PAs"
+pa_dir <- "C:/Users/Jean Linsky/Documents/Magnolia_Coordinator/GIS/Protected Areas Maps/Laos_PAs"
 	## for outputs
 output_dir <- "C:/Users/Jean Linsky/Documents/Magnolia_Coordinator/Statistics_and_R/Magnolia/Protected Area Maps for publication/Test_R_Maps"
 
@@ -85,7 +85,7 @@ wgs.proj <- sp::CRS(SRS_string="EPSG:4326")
 ## 	you can search for projections and their EPSG codes here: https://epsg.org
 ## FOR ASIA/PACIFIC: 8859; FOR THE AMERICAS: 8858; FOR EUROPE/AFRICA: 8857;
 ##	FOR THE U.S. ONLY, if you want to align with USGS preference: 5070
-aea.proj <- sp::CRS(SRS_string="EPSG:8858")
+aea.proj <- sp::CRS(SRS_string="EPSG:8859")
 	##CRS arguments: +proj=eqearth +lon_0=150 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs
 
 ### READ IN POLYGON DATA
@@ -98,7 +98,7 @@ world_countries <- readOGR(file.path(poly_dir,"UIA_World_Countries_Boundaries-sh
 sort(unique(world_countries@data$ISO))
 	## Look up country codes at website below, using "Alpha 2" column:
 	##	https://www.nationsonline.org/oneworld/country_code_list.htm
-target_iso <- c("DM","GP","MQ","VC","TT")
+target_iso <- c("CN","LA","VN")
 target_countries <- world_countries[world_countries@data$ISO %in% target_iso,]
 	## create polygon for clipping buffers later, one in each projection
 target_countries.wgs <- spTransform(target_countries,wgs.proj)
@@ -118,80 +118,53 @@ country_centers$y <- as.numeric(country_centers$y)
 
 
 ##Protected Areas
-GLPprotected_areas0 <- readOGR(file.path(pa_dir,"WDPA_WDOECM_Apr2021_Public_GLP_shp-polygons0.shp"))
+protected_areas0 <- readOGR(file.path(pa_dir,"WDPA_WDOECM_Apr2021_Public_CHN_shp-polygons0.shp"))
 ##clipping PAs to land only
-GLPprotected_areas0_clip.wgs <- raster::intersect(GLPprotected_areas0,boundary.wgs)
-GLPprotected_areas0_clip.aea <- raster::intersect(GLPprotected_areas0,boundary.aea)
+protected_areas0_clip.wgs <- raster::intersect(protected_areas0,boundary.wgs)
+protected_areas0_clip.aea <- raster::intersect(protected_areas0,boundary.aea)
 
-GLPprotected_areas1 <- readOGR(file.path(pa_dir,"WDPA_WDOECM_Apr2021_Public_GLP_shp-polygons1.shp"))
+##Protected Areas
+protected_areas1 <- readOGR(file.path(pa_dir,"WDPA_WDOECM_Apr2021_Public_CHN_shp-polygons1.shp"))
 ##clipping PAs to land only
-GLPprotected_areas1_clip.wgs <- raster::intersect(GLPprotected_areas1,boundary.wgs)
-GLPprotected_areas1_clip.aea <- raster::intersect(GLPprotected_areas1,boundary.aea)
+protected_areas1_clip.wgs <- raster::intersect(protected_areas1,boundary.wgs)
+protected_areas1_clip.aea <- raster::intersect(protected_areas1,boundary.aea)
 
-GLPprotected_areas2 <- readOGR(file.path(pa_dir,"WDPA_WDOECM_Apr2021_Public_GLP_shp-polygons2.shp"))
+##Protected Areas
+protected_areas2 <- readOGR(file.path(pa_dir,"WDPA_WDOECM_Apr2021_Public_CHN_shp-polygons2.shp"))
 ##clipping PAs to land only
-GLPprotected_areas2_clip.wgs <- raster::intersect(GLPprotected_areas2,boundary.wgs)
-GLPprotected_areas2_clip.aea <- raster::intersect(GLPprotected_areas2,boundary.aea)
+protected_areas2_clip.wgs <- raster::intersect(protected_areas2,boundary.wgs)
+protected_areas2_clip.aea <- raster::intersect(protected_areas2,boundary.aea)
 
-DMAprotected_areas0 <- readOGR(file.path(pa_dir,"WDPA_WDOECM_Apr2021_Public_DMA_shp-polygons0.shp"))
-##clipping PAs to land only
-DMAprotected_areas0_clip.wgs <- raster::intersect(DMAprotected_areas0,boundary.wgs)
-DMAprotected_areas0_clip.aea <- raster::intersect(DMAprotected_areas0,boundary.aea)
 
-DMAprotected_areas1 <- readOGR(file.path(pa_dir,"WDPA_WDOECM_Apr2021_Public_DMA_shp-polygons1.shp"))
+VNprotected_areas0 <- readOGR(file.path(pa_dir,"WDPA_WDOECM_Apr2021_Public_VNM_shp-polygons0.shp"))
 ##clipping PAs to land only
-DMAprotected_areas1_clip.wgs <- raster::intersect(DMAprotected_areas1,boundary.wgs)
-DMAprotected_areas1_clip.aea <- raster::intersect(DMAprotected_areas1,boundary.aea)
+VNprotected_areas0_clip.wgs <- raster::intersect(VNprotected_areas0,boundary.wgs)
+VNprotected_areas0_clip.aea <- raster::intersect(VNprotected_areas0,boundary.aea)
 
-DMAprotected_areas2 <- readOGR(file.path(pa_dir,"WDPA_WDOECM_Apr2021_Public_DMA_shp-polygons2.shp"))
+VNprotected_areas1 <- readOGR(file.path(pa_dir,"WDPA_WDOECM_Apr2021_Public_VNM_shp-polygons1.shp"))
 ##clipping PAs to land only
-DMAprotected_areas2_clip.wgs <- raster::intersect(DMAprotected_areas2,boundary.wgs)
-DMAprotected_areas2_clip.aea <- raster::intersect(DMAprotected_areas2,boundary.aea)
+VNprotected_areas1_clip.wgs <- raster::intersect(VNprotected_areas1,boundary.wgs)
+VNprotected_areas1_clip.aea <- raster::intersect(VNprotected_areas1,boundary.aea)
 
-MTQprotected_areas0 <- readOGR(file.path(pa_dir,"WDPA_WDOECM_Apr2021_Public_MTQ_shp-polygons0.shp"))
+VNprotected_areas2 <- readOGR(file.path(pa_dir,"WDPA_WDOECM_Apr2021_Public_VNM_shp-polygons2.shp"))
 ##clipping PAs to land only
-MTQprotected_areas0_clip.wgs <- raster::intersect(MTQprotected_areas0,boundary.wgs)
-MTQprotected_areas0_clip.aea <- raster::intersect(MTQprotected_areas0,boundary.aea)
+VNprotected_areas2_clip.wgs <- raster::intersect(VNprotected_areas2,boundary.wgs)
+VNprotected_areas2_clip.aea <- raster::intersect(VNprotected_areas2,boundary.aea)
 
-MTQprotected_areas1 <- readOGR(file.path(pa_dir,"WDPA_WDOECM_Apr2021_Public_MTQ_shp-polygons1.shp"))
+LAprotected_areas0 <- readOGR(file.path(pa_dir,"WDPA_WDOECM_Apr2021_Public_LAO_shp-polygons0.shp"))
 ##clipping PAs to land only
-MTQprotected_areas1_clip.wgs <- raster::intersect(MTQprotected_areas1,boundary.wgs)
-MTQprotected_areas1_clip.aea <- raster::intersect(MTQprotected_areas1,boundary.aea)
+LAprotected_areas0_clip.wgs <- raster::intersect(LAprotected_areas0,boundary.wgs)
+LAprotected_areas0_clip.aea <- raster::intersect(LAprotected_areas0,boundary.aea)
 
-MTQprotected_areas2 <- readOGR(file.path(pa_dir,"WDPA_WDOECM_Apr2021_Public_MTQ_shp-polygons2.shp"))
+LAprotected_areas1 <- readOGR(file.path(pa_dir,"WDPA_WDOECM_Apr2021_Public_LAO_shp-polygons1.shp"))
 ##clipping PAs to land only
-MTQprotected_areas2_clip.wgs <- raster::intersect(MTQprotected_areas2,boundary.wgs)
-MTQprotected_areas2_clip.aea <- raster::intersect(MTQprotected_areas2,boundary.aea)
+LAprotected_areas1_clip.wgs <- raster::intersect(LAprotected_areas1,boundary.wgs)
+LAprotected_areas1_clip.aea <- raster::intersect(LAprotected_areas1,boundary.aea)
 
-TTOprotected_areas0 <- readOGR(file.path(pa_dir,"WDPA_WDOECM_Apr2021_Public_TTO_shp-polygons0.shp"))
+LAprotected_areas2 <- readOGR(file.path(pa_dir,"WDPA_WDOECM_Apr2021_Public_LAO_shp-polygons2.shp"))
 ##clipping PAs to land only
-TTOprotected_areas0_clip.wgs <- raster::intersect(TTOprotected_areas0,boundary.wgs)
-TTOprotected_areas0_clip.aea <- raster::intersect(TTOprotected_areas0,boundary.aea)
-
-TTOprotected_areas1 <- readOGR(file.path(pa_dir,"WDPA_WDOECM_Apr2021_Public_TTO_shp-polygons1.shp"))
-##clipping PAs to land only
-TTOprotected_areas1_clip.wgs <- raster::intersect(TTOprotected_areas1,boundary.wgs)
-TTOprotected_areas1_clip.aea <- raster::intersect(TTOprotected_areas1,boundary.aea)
-
-TTOprotected_areas2 <- readOGR(file.path(pa_dir,"WDPA_WDOECM_Apr2021_Public_TTO_shp-polygons2.shp"))
-##clipping PAs to land only
-TTOprotected_areas2_clip.wgs <- raster::intersect(TTOprotected_areas2,boundary.wgs)
-TTOprotected_areas2_clip.aea <- raster::intersect(TTOprotected_areas2,boundary.aea)
-
-VCTprotected_areas0 <- readOGR(file.path(pa_dir,"WDPA_WDOECM_Apr2021_Public_VCT_shp-polygons0.shp"))
-##clipping PAs to land only
-VCTprotected_areas0_clip.wgs <- raster::intersect(VCTprotected_areas0,boundary.wgs)
-VCTprotected_areas0_clip.aea <- raster::intersect(VCTprotected_areas0,boundary.aea)
-
-VCTprotected_areas1 <- readOGR(file.path(pa_dir,"WDPA_WDOECM_Apr2021_Public_VCT_shp-polygons1.shp"))
-##clipping PAs to land only
-VCTprotected_areas1_clip.wgs <- raster::intersect(VCTprotected_areas1,boundary.wgs)
-VCTprotected_areas1_clip.aea <- raster::intersect(VCTprotected_areas1,boundary.aea)
-
-VCTprotected_areas2 <- readOGR(file.path(pa_dir,"WDPA_WDOECM_Apr2021_Public_VCT_shp-polygons2.shp"))
-##clipping PAs to land only
-VCTprotected_areas2_clip.wgs <- raster::intersect(VCTprotected_areas2,boundary.wgs)
-VCTprotected_areas2_clip.aea <- raster::intersect(VCTprotected_areas2,boundary.aea)
+LAprotected_areas2_clip.wgs <- raster::intersect(VNprotected_areas2,boundary.wgs)
+LAprotected_areas2_clip.aea <- raster::intersect(LAprotected_areas2,boundary.aea)
 
 ## States
 	## read in state polygons using rnaturalearth package (or can read in other shapefile
@@ -219,12 +192,12 @@ state_centers
 ### CREATE COLOR PALETTES / MAP ICONS
 
 ## PA polygon colors
-pa_pal_colors <- createPalette(length(unique(DMAprotected_areas0@data$ECO_ID)),
+pa_pal_colors <- createPalette(length(unique(protected_areas0@data$ECO_ID)),
 	seedcolors = c("#ba3c3c","#ba7d3c","#baab3c","#3ca7ba","#3c6aba","#573cba","#943cba","#ba3ca1","#ba3c55"),
 	range = c(5,42), target = "normal", M=50000)
 swatch(pa_pal_colors)
 pa_pal_colors <- as.vector(pa_pal_colors)
-pa_pal <- colorFactor(pa_pal_colors,DMAprotected_areas0@data$ECO_ID)
+pa_pal <- colorFactor(pa_pal_colors,protected_areas0@data$ECO_ID)
 
 
 ################################################################################
@@ -233,7 +206,7 @@ pa_pal <- colorFactor(pa_pal_colors,DMAprotected_areas0@data$ECO_ID)
 
 ### CREATE LIST OF TARGET SPECIES
 
-target_sp <- c("Magnolia_dodecapetala")
+target_sp <- c("Magnolia_odora")
 ## select species to work with now
 sp <- 1
 
@@ -241,7 +214,7 @@ sp <- 1
 
 ## read in wild in situ occurrence points
 insitu <- read.csv(file.path(pts_dir,paste0(target_sp[sp],
-	".csv")),na.strings=c("","NA"),
+	"_1.csv")),na.strings=c("","NA"),
 	stringsAsFactors = F)
 str(insitu)
 ## change column names or remove columns as needed; need at least
@@ -270,26 +243,26 @@ map <- leaflet(options = leafletOptions(maxZoom = 9)) %>%
 		position = "topright") %>%
 	## ProtectedAreas
   addPolygons(
-    data = TTOprotected_areas0_clip.wgs, label = ~NAME,
-    fillColor = ~pa_pal(DMAprotected_areas0_clip.wgs@data$ECO_ID),
+    data = LAprotected_areas0_clip.wgs, label = ~NAME,
+    fillColor = ~pa_pal(protected_areas0_clip.wgs@data$ECO_ID),
     fillOpacity = 0.8, color = "#038f28", weight = 1.5, opacity = 0.8) %>%
   addPolygons(
-    data = TTOprotected_areas1_clip.wgs, label = ~NAME,
-    fillColor = ~pa_pal(DMAprotected_areas0_clip.wgs@data$ECO_ID),
+    data = LAprotected_areas1_clip.wgs, label = ~NAME,
+    fillColor = ~pa_pal(protected_areas0_clip.wgs@data$ECO_ID),
     fillOpacity = 0.8, color = "#038f28", weight = 1.5, opacity = 0.8) %>%
   addPolygons(
-    data = TTOprotected_areas2_clip.wgs, label = ~NAME,
-    fillColor = ~pa_pal(DMAprotected_areas0@data$ECO_ID),
+    data = LAprotected_areas2_clip.wgs, label = ~NAME,
+    fillColor = ~pa_pal(protected_areas0@data$ECO_ID),
     fillOpacity = 0.8, color = "#038f28", weight = 1.5, opacity = 0.8) %>%
 	## (optional) Country or state outlines
 	##	when you add these outlines, ecoregion labels don't pop up anymore...
 	##	not sure yet how to have both on the map
   addPolygons(
-    data = target_countries.wgs, label = ~COUNTRY, fillColor = "transparent",
+    data = state_bound_clip.wgs, label = ~name_en, fillColor = "transparent",
     weight = 1.5, opacity = 0.3, color = "black") %>%
   ## (optional) Add static labels to countries/states
   addLabelOnlyMarkers(
-    data = country_centers, lng = ~x, lat = ~y, label = ~label,
+    data = state_centers, lng = ~x, lat = ~y, label = ~label,
     labelOptions = labelOptions(noHide = TRUE, textOnly = TRUE,
       style = list("font-weight"="bold","font-size"="13px","color"="black"))) %>%
 	## (optional) In situ points

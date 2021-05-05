@@ -50,7 +50,7 @@ rm(list=ls())
 my.packages <- c("leaflet","raster","sp","rgeos","plyr","dplyr","rgdal",
 	"Polychrome","cleangeo","RColorBrewer","smoothr","rnaturalearth","polylabelr",
 	"sf")
-#install.packages(my.packages) # turn on to install current versions
+install.packages(my.packages) # turn on to install current versions
 lapply(my.packages, require, character.only=TRUE)
 
 select <- dplyr::select
@@ -164,7 +164,7 @@ world_countries <- readOGR(file.path(poly_dir,"UIA_World_Countries_Boundaries-sh
 sort(unique(world_countries@data$ISO))
 	## Look up country codes at website below, using "Alpha 2" column:
 	##	https://www.nationsonline.org/oneworld/country_code_list.htm
-target_iso <- c("CN","VN")
+target_iso <- c("CN")
 target_countries <- world_countries[world_countries@data$ISO %in% target_iso,]
 	## create polygon for clipping buffers later, one in each projection
 target_countries.wgs <- spTransform(target_countries,wgs.proj)
@@ -220,6 +220,7 @@ ecoregions.aea <- spTransform(ecoregions,aea.proj)
 ecoregions_clip.wgs <- raster::intersect(ecoregions.wgs,boundary.wgs)
 ecoregions_clip.aea <- raster::intersect(ecoregions.aea,boundary.aea)
 
+
 ### CREATE COLOR PALETTES / MAP ICONS
 
 ## Ecoregions polygon colors
@@ -249,7 +250,7 @@ triangle_lg <- makeIcon(iconUrl = "https://www.freeiconspng.com/uploads/triangle
 ### CREATE LIST OF TARGET SPECIES
 
 #target_sp <- c("Magnolia_lacei","Magnolia_lotungensis","Magnolia_mexicana","Magnolia_oaxacensis","Magnolia_odora")
-target_sp <- c("Magnolia_lacei")
+target_sp <- c("Magnolia_xanthantha")
 ## select species to work with now
 sp <- 1
 
@@ -257,7 +258,7 @@ sp <- 1
 
 ## read in wild in situ occurrence points
 insitu <- read.csv(file.path(pts_dir,paste0(target_sp[sp],
-	"_1.csv")),na.strings=c("","NA"),
+	".csv")),na.strings=c("","NA"),
 	stringsAsFactors = F)
 str(insitu)
 ## change column names or remove columns as needed; need at least
@@ -445,7 +446,7 @@ for(sp in 1:length(target_sp)){
 	## RIGHT NOW THIS IS JUST COPIED FROM ABOVE; WAY TO SHORTEN/NOT REPEAT?
 	## read in wild in situ occurrence points
 	insitu <- read.csv(file.path(pts_dir,paste0(target_sp[sp],
-		"_1.csv")),na.strings=c("","NA"),
+		".csv")),na.strings=c("","NA"),
 		stringsAsFactors = F)
 	## change column names or remove columns as needed; need at least
 	##	"decimalLatitude" and "decimalLongitude"
@@ -545,5 +546,5 @@ for(sp in 1:length(target_sp)){
 
 ## write summary table
 summary_tbl
-write.csv(summary_tbl, file.path(output_dir,"M_lacei_ExSituCoverage_Test_Table.csv"),
+write.csv(summary_tbl, file.path(output_dir,"M_xanthantha_ExSituCoverage_Test_Table.csv"),
 	row.names = F)

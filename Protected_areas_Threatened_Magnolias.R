@@ -47,7 +47,7 @@ pts_dir <- "C:/Users/Jean Linsky/Documents/Magnolia_Coordinator/Statistics_and_R
 	## for polygon data (ecoregions, states, countries)
 poly_dir <- "C:/Users/Jean Linsky/Documents/Magnolia_Coordinator/Statistics_and_R/Magnolia/polygons"
   ## PA directory
-pa_dir <- "C:/Users/Jean Linsky/Documents/Magnolia_Coordinator/GIS/Protected Areas Maps/Vietnam_PAs"
+pa_dir <- "C:/Users/Jean Linsky/Documents/Magnolia_Coordinator/GIS/Protected Areas Maps/China_PAs"
 	## for outputs
 output_dir <- "C:/Users/Jean Linsky/Documents/Magnolia_Coordinator/Statistics_and_R/Magnolia/Protected Area Maps for publication/Test_R_Maps"
 
@@ -98,7 +98,7 @@ world_countries <- readOGR(file.path(poly_dir,"UIA_World_Countries_Boundaries-sh
 sort(unique(world_countries@data$ISO))
 	## Look up country codes at website below, using "Alpha 2" column:
 	##	https://www.nationsonline.org/oneworld/country_code_list.htm
-target_iso <- c("CN","VN")
+target_iso <- c("CN")
 target_countries <- world_countries[world_countries@data$ISO %in% target_iso,]
 	## create polygon for clipping buffers later, one in each projection
 target_countries.wgs <- spTransform(target_countries,wgs.proj)
@@ -179,7 +179,7 @@ pa_pal <- colorFactor(pa_pal_colors,protected_areas0@data$ECO_ID)
 
 ### CREATE LIST OF TARGET SPECIES
 
-target_sp <- c("Magnolia_lacei")
+target_sp <- c("Magnolia_xanthantha")
 ## select species to work with now
 sp <- 1
 
@@ -241,7 +241,7 @@ map <- leaflet(options = leafletOptions(maxZoom = 9)) %>%
 	## (optional) In situ points
 	addCircleMarkers(data = insitu,
 		lng = ~decimalLongitude, lat = ~decimalLatitude,
-		color = "black", radius = 3, fillOpacity = 1, stroke = F) %>%
+		color = "black", radius = 5, fillOpacity = 1, stroke = F) %>%
 	## Add scale bar
 	addScaleBar(position = "bottomright",
 		options = scaleBarOptions(maxWidth = 150)) %>%

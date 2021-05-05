@@ -536,5 +536,5 @@ for(sp in 1:length(target_sp)){
 
 ## write summary table
 summary_tbl
-write.csv(summary_tbl, file.path(output_dir,"ExSituCoverage_Test_Table.csv"),
+write.csv(summary_tbl, file.path(output_dir,"ExSituCoverage_Test_Table_MagnoliaTest.csv"),
 	row.names = F)

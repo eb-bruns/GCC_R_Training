@@ -50,7 +50,7 @@ rm(list=ls())
 my.packages <- c("leaflet","raster","sp","rgeos","plyr","dplyr","rgdal",
 	"Polychrome","cleangeo","RColorBrewer","smoothr","rnaturalearth","polylabelr",
 	"sf")
-#install.packages(my.packages) # turn on to install current versions
+install.packages(my.packages) # turn on to install current versions
 lapply(my.packages, require, character.only=TRUE)
 
 select <- dplyr::select
@@ -62,6 +62,7 @@ select <- dplyr::select
 ## set up working directories
 	## for point data (in situ and ex situ)
 pts_dir <- "C:/Users/Jean Linsky/Documents/Magnolia_Coordinator/Statistics_and_R/outputs/spp_raw_points"
+ex_pts_dir <- "C:/Users/Jean Linsky/Documents/Magnolia_Coordinator/Statistics_and_R/outputs/spp_ex_situ_points"
 	## for polygon data (ecoregions, states, countries)
 poly_dir <- "C:/Users/Jean Linsky/Documents/Magnolia_Coordinator/Statistics_and_R/Magnolia/polygons"
 	## for outputs
@@ -173,6 +174,15 @@ target_countries.aea <- spTransform(target_countries,aea.proj)
 	##	a work-around
 boundary.aea <- aggregate(target_countries.aea,dissolve = TRUE)
 
+## find the visual center point of each country (still not perfect), for
+##		labeling purposes
+simple_countries <- st_as_sf(target_countries.wgs)
+country_centers <- as.data.frame(do.call(rbind, poi(simple_countries, precision=0.01)))
+country_centers$label <- target_countries.wgs@data$COUNTRY
+country_centers$x <- as.numeric(country_centers$x)
+country_centers$y <- as.numeric(country_centers$y)
+
+
 #install.packages("rnaturalearthhires", repos = "http://packages.ropensci.org", type = "source")
 
 #state_bound <- readOGR(file.path(poly_dir, "gadm36_CHN_shp/gadm36_CHN_2.shp"))
@@ -210,6 +220,7 @@ ecoregions.aea <- spTransform(ecoregions,aea.proj)
 ecoregions_clip.wgs <- raster::intersect(ecoregions.wgs,boundary.wgs)
 ecoregions_clip.aea <- raster::intersect(ecoregions.aea,boundary.aea)
 
+
 ### CREATE COLOR PALETTES / MAP ICONS
 
 ## Ecoregions polygon colors
@@ -239,7 +250,7 @@ triangle_lg <- makeIcon(iconUrl = "https://www.freeiconspng.com/uploads/triangle
 ### CREATE LIST OF TARGET SPECIES
 
 #target_sp <- c("Magnolia_lacei","Magnolia_lotungensis","Magnolia_mexicana","Magnolia_oaxacensis","Magnolia_odora")
-target_sp <- c("Magnolia_sinica")
+target_sp <- c("Magnolia_xanthantha")
 ## select species to work with now
 sp <- 1
 
@@ -261,7 +272,7 @@ insitu <- clip.by.boundary(insitu,wgs.proj,boundary.wgs)
 str(insitu)
 
 ## read in ex situ wild locality points
-exsitu <- read.csv(file.path(pts_dir,paste0(target_sp[sp],
+exsitu <- read.csv(file.path(ex_pts_dir,paste0(target_sp[sp],
 	"_ALL_POSTGEO.csv")),na.strings=c("","NA"),stringsAsFactors = F)
 str(exsitu)
 ## change column names or remove columns as needed; should have at least
@@ -320,7 +331,7 @@ insitu <- rbind.fill(insitu,exsitu)
 insitu_buff_wgs <- create.buffers(insitu,20000,wgs.proj,wgs.proj,boundary.wgs)
 exsitu_buff_wgs <- create.buffers(exsitu,20000,wgs.proj,wgs.proj,boundary.wgs)
 
-## map everthing!
+## map everything!
 	## can turn layers on or off, or switch them for other polygons, as desired
 map <- leaflet(options = leafletOptions(maxZoom = 9)) %>%
   ## Base layer
@@ -336,16 +347,20 @@ map <- leaflet(options = leafletOptions(maxZoom = 9)) %>%
 		fillColor = ~eco_pal(ecoregions_clip.wgs@data$ECO_ID),
 		fillOpacity = 0.8, color = "#757575", weight = 1.5, opacity = 0.8) %>%
 	## (optional) Country or state outlines
+  ##  REMEMBER TO CHANGE BETWEEN COUNTRIE AND STATES, DEPENDING ON SPECIES
 	##	when you add these outlines, ecoregion labels don't pop up anymore...
 	##	not sure yet how to have both on the map
-	addPolygons(
-		data = state_bound_clip.wgs, label = ~name_en, fillColor = "transparent",
-		weight = 1.5, opacity = 0.3, color = "black") %>%
-		## (optional) Add static labels to countries/states
-	addLabelOnlyMarkers(
-		data = state_centers, lng = ~x, lat = ~y, label = ~label,
+  ## (optional) Country or state outlines
+  ##	when you add these outlines, ecoregion labels don't pop up anymore...
+  ##	not sure yet how to have both on the map
+  addPolygons(
+    data = state_bound_clip.wgs, label = ~name_en, fillColor = "transparent",
+    weight = 1.5, opacity = 0.3, color = "black") %>%
+  ## (optional) Add static labels to countries/states
+  addLabelOnlyMarkers(
+    data = state_centers, lng = ~x, lat = ~y, label = ~label,
     labelOptions = labelOptions(noHide = TRUE, textOnly = TRUE,
-			style = list("font-weight"="bold","font-size"="13px","color"="black"))) %>%
+          style = list("font-weight"="bold","font-size"="13px","color"="black"))) %>%
 	## Buffers
 		## In situ
 	addPolygons(
@@ -370,9 +385,9 @@ map <- leaflet(options = leafletOptions(maxZoom = 9)) %>%
 		lng = ~decimalLongitude, lat = ~decimalLatitude, icon = triangle_lg,
 		popup = exsitu3$inst_short) %>%
 	## (optional) In situ points
-	#addCircleMarkers(data = insitu,
-		#lng = ~decimalLongitude, lat = ~decimalLatitude,
-		#color = "white", radius = 3, fillOpacity = 1, stroke = F) %>%
+	addCircleMarkers(data = insitu,
+		lng = ~decimalLongitude, lat = ~decimalLatitude,
+		color = "white", radius = 3, fillOpacity = 1, stroke = F) %>%
 	## Add scale bar
 	addScaleBar(position = "bottomright",
 		options = scaleBarOptions(maxWidth = 150)) %>%
@@ -401,9 +416,10 @@ map <- leaflet(options = leafletOptions(maxZoom = 9)) %>%
 map
 
 ## save map as html file, so you can embed on a webpage or share with others
-		# looks like some of these maps are too big to save? works best to view
-		#		one-by-one in browser straight from R and take screenshot
+# looks like some of these maps are too big to save? works best to view
+#		one-by-one in browser straight from R and take screenshot
 htmlwidgets::saveWidget(map, file.path(output_dir,paste0(target_sp[sp],"_leaflet_map.html")))
+
 
 ################################################################################
 ## Calculate geographic and ecological coverage of ex situ collections
@@ -442,7 +458,7 @@ for(sp in 1:length(target_sp)){
 	insitu <- clip.by.boundary(insitu,wgs.proj,boundary.wgs)
 
 	## read in ex situ wild locality points
-	exsitu <- read.csv(file.path(pts_dir,paste0(target_sp[sp],
+	exsitu <- read.csv(file.path(ex_pts_dir,paste0(target_sp[sp],
 		"_ALL_POSTGEO.csv")),na.strings=c("","NA"),stringsAsFactors = F)
 	## change column names or remove columns as needed; should have at least
 	##	"decimalLatitude","decimalLongitude","num_indiv"
@@ -530,5 +546,5 @@ for(sp in 1:length(target_sp)){
 
 ## write summary table
 summary_tbl
-write.csv(summary_tbl, file.path(output_dir,"M_sinica_ExSituCoverage_Test_Table.csv"),
+write.csv(summary_tbl, file.path(output_dir,"M_xanthantha_ExSituCoverage_Test_Table.csv"),
 	row.names = F)

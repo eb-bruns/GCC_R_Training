@@ -14,9 +14,10 @@
   #   species, and regions.
 
 ### OUTPUTS:
-  ## Summary CSV for each matrix question (Question1Results.csv,
-  #   Question2Results.csv, etc.)
-  ## One CSV with results from all matrix questions (AllResults.csv)
+  ## Summary CSV for each matrix question, two ways:
+  #   1) "Grid" format (easier for human viewing)
+  #   2) "Long" format (best for summarizing using pivot tables)
+  ## CSV with results from all matrix questions, two ways (grid and long)
   ## Notes from open-ended question about additional target species
   #   (AdditionalSpeciesNotes.csv)
 
@@ -73,8 +74,8 @@ regions <- c("Mexico & Central America","Caribbean","South America","East Asia",
 # unique part of each main question asked
 select_sp <- "Select all species from"
 Q1_match <- "Select all conservation activities your institution participates in"
-Q2_match <- "Select what you see as the most urgent conservation activity"
-Q3_match <- "Select what you see as the most significant threat"
+Q2_match <- "Select what you see as the most urgent conservation activities"
+Q3_match <- "Select what you see as the most significant threats"
 
 # create dataframes for collecting results, one for each main question
   # QUESTION1
@@ -111,10 +112,10 @@ Q2_results <- data.frame(
   "Population reinforcement or introduction" = as.character(NA),
   "Protect and/or manage habitat" = as.character(NA),
   "Public awareness or education" = as.character(NA),
-  "Research: Climate Change" = as.character(NA),
   "Research: Genetics" = as.character(NA),
-  "Research: Pests & Pathogens" = as.character(NA),
   "Research: Taxonomy" = as.character(NA),
+  "Research: Climate Change" = as.character(NA),
+  "Research: Pests & Pathogens" = as.character(NA),
   "Unknown" = as.character(NA),
   "None (no conservation actions currently needed)" = as.character(NA),
     # metadata you want to add
@@ -195,28 +196,46 @@ for(q in 1:length(results)){
   results[[q]] <- df_out
 }
 
-
 ## SAVE ALL RESULTS IN ONE FILE:
 
 # join all questions
 join_all <- results[[1]]
 join_all <- join_all[,c(ncol(join_all),(ncol(join_all)-1),1,2:(ncol(Q1_results)-3))]
 for(i in 1:(length(results)-1)){
-  join_all <- left_join(join_all,results[[i+1]],
+  join_all <- full_join(join_all,results[[i+1]],
     by=c("respondent_id","region","species"))
 }
 join_all <- right_join(respondent_info,join_all)
-write.csv(join_all,file.path(main_dir,"AllResults.csv"),row.names = F)
+  # sort by whatever variables you'd like:
+join_all <- join_all %>% arrange(species,name)
+write.csv(join_all,file.path(main_dir,"Grid_AllResults.csv"),row.names = F)
 
 
 ## SAVE RESULTS IN SEPARATE FILES, BY QUESTIONN:
 
 # join all respondent info to each dataframe and write files
-for(i in 1:length(results)){
-  results[[i]] <- left_join(results[[i]],respondent_info)
-  write.csv(results[[i]],file.path(main_dir,paste0("Question",i,"Results.csv")),
+for(q in 1:length(results)){
+  results[[q]] <- left_join(results[[q]],respondent_info)
+  write.csv(results[[q]],file.path(main_dir,paste0("Grid_Question",q,"Results.csv")),
     row.names = F)
+  long_format <- data.frame()
+  num_datacol <- (ncol(results[[q]])-ncol(respondent_info)-2)
+  for(cat in 1:num_datacol){
+    meta <- results[[q]][,c(1,(num_datacol+2):ncol(results[[q]]))]
+    add <- results[[q]][,(cat+1)]
+    add_all <- cbind(meta,add)
+    colnames(add_all)[(ncol(respondent_info)+3)] <- "activity"
+    long_format <- rbind(long_format,add_all)
+  }
+  long_format <- long_format[!is.na(long_format$activity),]
+  results[[q]] <- long_format
+  write.csv(results[[q]],file.path(main_dir,paste0("Long_Question",q,"Results.csv")),
+    row.names = F)
+  results[[q]]$question <- q
 }
+
+long_results <- Reduce(rbind,results)
+write.csv(long_results,file.path(main_dir,"Long_AllResults.csv"), row.names = F)
 
 
 ## GET NOTES ABOUT ADDITIONAL SPECIES

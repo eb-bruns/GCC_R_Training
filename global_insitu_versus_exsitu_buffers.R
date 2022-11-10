@@ -46,9 +46,8 @@
 ### LIBRARIES ###
 #################
 
-my.packages <- c("leaflet","raster","sp","rgeos","plyr","dplyr","rgdal",
-	"Polychrome","cleangeo","RColorBrewer","smoothr","rnaturalearth","polylabelr",
-	"sf")
+my.packages <- c("rgdal","raster","rnaturalearth","sf","polylabelr","Polychrome",
+	"leaflet","plyr","dplyr")
 #install.packages(my.packages) # turn on to install current versions
 lapply(my.packages, require, character.only=TRUE)
 
@@ -60,11 +59,11 @@ select <- dplyr::select
 
 ## set up working directories
 	## for point data (in situ and ex situ)
-pts_dir <- "/Volumes/GoogleDrive/My Drive/Conservation Consortia/R Training/buffer_mapping/points"
+pts_dir <- "/Volumes/GoogleDrive-103729429307302508433/.shortcut-targets-by-id/1DdBQEB8e0EsgSg9tWiFeOmrKa5ki5GRJ/Conservation Consortia/R Training/buffer_mapping/points"
 	## for polygon data (ecoregions, states, countries)
-poly_dir <- "/Volumes/GoogleDrive/My Drive/Conservation Consortia/R Training/buffer_mapping/polygons"
+poly_dir <- "/Volumes/GoogleDrive-103729429307302508433/.shortcut-targets-by-id/1DdBQEB8e0EsgSg9tWiFeOmrKa5ki5GRJ/Conservation Consortia/R Training/buffer_mapping/polygons"
 	## for outputs
-output_dir <- "/Volumes/GoogleDrive/My Drive/Conservation Consortia/R Training/buffer_mapping/outputs"
+output_dir <- "/Volumes/GoogleDrive-103729429307302508433/.shortcut-targets-by-id/1DdBQEB8e0EsgSg9tWiFeOmrKa5ki5GRJ/Conservation Consortia/R Training/buffer_mapping/outputs"
 
 #################
 ### FUNCTIONS ###
@@ -166,11 +165,11 @@ target_iso <- c("CN","JP")
 target_countries <- world_countries[world_countries@data$ISO %in% target_iso,]
 	## create polygon for clipping buffers later, one in each projection
 target_countries.wgs <- spTransform(target_countries,wgs.proj)
-boundary.wgs <- aggregate(target_countries.wgs,dissolve = TRUE)
+boundary.wgs <- raster::aggregate(target_countries.wgs,dissolve = TRUE)
 target_countries.aea <- spTransform(target_countries,aea.proj)
 	## this is where the error occurs with certain countries.. may need to find
 	##	a work-around
-boundary.aea <- aggregate(target_countries.aea,dissolve = TRUE)
+boundary.aea <- raster::aggregate(target_countries.aea,dissolve = TRUE)
 
 ## States
 	## read in state polygons using rnaturalearth package (or can read in other shapefile
@@ -429,7 +428,7 @@ for(sp in 1:length(target_sp)){
 	## change column names or remove columns as needed; need at least
 	##	"decimalLatitude" and "decimalLongitude"
 	insitu <- insitu %>%
-		rename(decimalLatitude = Latitude, decimalLongitude = Longitude) %>%
+		dplyr::rename(decimalLatitude = Latitude, decimalLongitude = Longitude) %>%
 		filter(Category == "in_situ")
 	## if desired, can clip points by boundary so only in target area
 	## (helpful if focusing on one country/region)
@@ -441,7 +440,7 @@ for(sp in 1:length(target_sp)){
 	## change column names or remove columns as needed; should have at least
 	##	"decimalLatitude","decimalLongitude","num_indiv"
 	exsitu <- exsitu %>%
-		rename(decimalLatitude = lat_dd, decimalLongitude = long_dd) %>%
+		dplyr::rename(decimalLatitude = lat_dd, decimalLongitude = long_dd) %>%
 		select(UID,inst_short,prov_type,gps_det,decimalLatitude,decimalLongitude,
 			num_indiv)
 	unique(exsitu$num_indiv)

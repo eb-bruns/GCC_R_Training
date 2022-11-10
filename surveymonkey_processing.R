@@ -28,7 +28,7 @@
 ## SET UP YOUR WORKSPACE
 
 # set working directory
-main_dir <- "/Volumes/GoogleDrive/My Drive/Conservation Consortia/R Training/Magnolia_ConservationActionQuestionnaire"
+main_dir <- "/Volumes/GoogleDrive-103729429307302508433/.shortcut-targets-by-id/1DdBQEB8e0EsgSg9tWiFeOmrKa5ki5GRJ/Conservation Consortia/R Training/Magnolia_ConservationActionQuestionnaire"
 survey_export_file <- "Magnolia_Conservation_Actions_Questionnaire.xlsx"
 
 # load libraries

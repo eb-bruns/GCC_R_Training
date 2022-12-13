@@ -1339,8 +1339,9 @@ keep_col <- c(
   # key data
   "UID","inst_short","taxon_name_accepted","acc_num","prov_type","num_indiv",
   # locality
-  "lat_dd","long_dd","flag","gps_det","uncertainty","locality",
-  "municipality","county","state","country","latlong_country","assoc_sp",
+  "lat_dd","long_dd","flag","gps_det","uncertainty","all_locality",
+  "locality","municipality","county","state","country",
+  "latlong_country","assoc_sp",
   # source
   "orig_source","lin_num","coll_name","coll_num","coll_year",
   # material info
@@ -1494,8 +1495,8 @@ table(need_geo$flag) #368
 write.csv(need_geo, file.path(main_dir,"ex-situ_data","OUTPUTS_FROM_R",
   paste0("ExSitu_Need_Geolocation_", Sys.Date(), ".csv")),row.names = F)
 
-### LINK INSTRUCTIONS HERE FOR GEOLOCATING:
-### !!XXXXXXXXXXXXXXXXXXX!!
+### INSTRUCTIONS FOR GEOLOCATING:
+### https://docs.google.com/document/d/1RBUD6-ogLc7PRVkDJSIEKzkgvC6xekj9Q_kl1vzxhCs/edit?usp=sharing
 
 ################################################################################
 # 9. Add geolocated data, after manual geolocation
